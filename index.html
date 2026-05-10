@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- MarketEdge Pro v2.7 - 20260510085701 -->
+<!-- MarketEdge Pro v2.8X - 20260510090123 -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -844,10 +844,17 @@ async function runIntelligence(){
   document.getElementById('intResults').classList.remove('on');
   const iv=startSteps('intStep',INT_STEPS);
   const today=new Date().toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'});
-  const prompt=`You are a senior Indian stock market analyst. Today is ${today}.
-Analyse BSE+NSE for Sector: ${sec.options[sec.selectedIndex].text}, Risk: ${risk.value}, Amount: ${amt.value}.
-Return ONLY valid JSON (no markdown):
-{"picks":[{"ticker":"TICKER","name":"Full Name","exchange":"NSE","price":"₹X","change":"+1.2","pe":"28","target6m":"₹X","upside":"+18%","signal":"Strong Buy","reason":"Brief reason","isTop":true},{"ticker":"...","name":"...","exchange":"BSE","price":"₹...","change":"-0.3","pe":"19","target6m":"₹...","upside":"+12%","signal":"Buy","reason":"...","isTop":false},{"ticker":"...","name":"...","exchange":"NSE","price":"₹...","change":"+0.5","pe":"22","target6m":"₹...","upside":"+9%","signal":"Watch","reason":"...","isTop":false}],"compare":[{"exch":"BSE","metric":"Market Breadth","value":"74%","pct":74},{"exch":"NSE","metric":"Market Breadth","value":"71%","pct":71},{"exch":"BSE","metric":"Avg P/E","value":"24x","pct":60},{"exch":"NSE","metric":"Avg P/E","value":"22x","pct":55},{"exch":"BSE","metric":"Liquidity","value":"82/100","pct":82},{"exch":"NSE","metric":"Liquidity","value":"91/100","pct":91}],"analysis":"4 paragraphs: sector outlook, BSE vs NSE for this sector, risk factors, why these picks. Use **bold** for key terms."}`;
+  var sLabel=sec.options[sec.selectedIndex].text;
+  var prompt='You are a senior Indian stock market analyst. Today is '+today+'. '+
+    'Analyse BSE+NSE for Sector: '+sLabel+', Risk: '+risk.value+', Amount: '+amt.value+'. '+
+    'Return ONLY valid JSON (no markdown): '+
+    '{"picks":[{"ticker":"TICKER","name":"Full Name","exchange":"NSE","price":"X","change":"+1.2","pe":"28","target6m":"X","upside":"+18%","signal":"Strong Buy","reason":"Brief reason","isTop":true},'+
+    '{"ticker":"T2","name":"N2","exchange":"BSE","price":"X","change":"-0.3","pe":"19","target6m":"X","upside":"+12%","signal":"Buy","reason":"reason","isTop":false},'+
+    '{"ticker":"T3","name":"N3","exchange":"NSE","price":"X","change":"+0.5","pe":"22","target6m":"X","upside":"+9%","signal":"Watch","reason":"reason","isTop":false}],'+
+    '"compare":[{"exch":"BSE","metric":"Market Breadth","value":"74%","pct":74},{"exch":"NSE","metric":"Market Breadth","value":"71%","pct":71},'+
+    '{"exch":"BSE","metric":"Avg PE","value":"24x","pct":60},{"exch":"NSE","metric":"Avg PE","value":"22x","pct":55},'+
+    '{"exch":"BSE","metric":"Liquidity","value":"82/100","pct":82},{"exch":"NSE","metric":"Liquidity","value":"91/100","pct":91}],'+
+    '"analysis":"4 paragraphs: sector outlook, BSE vs NSE, risk factors, why these picks."}';
   try{
     const d=await callClaude(prompt);
     clearInterval(iv);document.getElementById('intLoader').classList.remove('on');
@@ -1079,7 +1086,14 @@ async function analyzePortfolio(){
   const iv=startSteps('portStep',PORT_STEPS);
   const holdings=portfolio.map(s=>`${s.ticker} (${s.name}) — ${s.exchange}, ${s.sector}, Buy:₹${s.buy}, Qty:${s.qty}, Date:${s.date}`).join('\n');
   const today=new Date().toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'});
-  const prompt=`You are a senior Indian portfolio manager. Today is ${today}.\nHoldings:\n${holdings}\nProvide Sell & Switch analysis for 6-month horizon. Return ONLY valid JSON:\n{"stockAdvice":[{"ticker":"X","action":"Hold","reason":"brief","target6m":"₹X","riskFlag":false}],"sellAlerts":["alert text if urgent sell needed"],"switchRecommendations":[{"exit":"TICKER","enter":"NEW","enterName":"Name","enterExchange":"NSE","reasoning":"why"}],"portfolioScore":72,"diversificationAdvice":"one paragraph","summary":"3-4 paragraphs with **bold** key terms: overall assessment, risk factors, 6M return projection"}`;
+  var prompt='You are a senior Indian portfolio manager. Today is '+today+'.' +
+    ' Holdings: '+holdings+
+    ' Provide Sell & Switch analysis for 6-month horizon. Return ONLY valid JSON:' +
+    ' {"stockAdvice":[{"ticker":"X","action":"Hold","reason":"brief","target6m":"X","riskFlag":false}],' +
+    '"sellAlerts":["alert if urgent sell"],' +
+    '"switchRecommendations":[{"exit":"TICKER","enter":"NEW","enterName":"Name","enterExchange":"NSE","reasoning":"why"}],' +
+    '"portfolioScore":72,"diversificationAdvice":"one paragraph",' +
+    '"summary":"3-4 paragraphs with bold key terms"}';
   try{
     const d=await callClaude(prompt);
     clearInterval(iv);document.getElementById('portLoader').classList.remove('on');
@@ -1432,19 +1446,12 @@ async function buildProjNarrative(totalInvested){
   const tot3=portfolio.reduce((a,s)=>a+projectValue(s.buy,s.qty,s.sector,36,currentScenario),0);
   const today=new Date().toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'});
 
-  const prompt=`You are a senior Indian equity research analyst. Today is ${today}.
-Portfolio holdings and 3-year projections (${currentScenario} case):
-${holdings}
-Total invested: ₹${Math.round(totalInvested).toLocaleString('en-IN')}
-Projected 3Y total (${currentScenario}): ₹${Math.round(tot3).toLocaleString('en-IN')}
-
-Write a 3-4 paragraph growth analysis narrative:
-1. Overall portfolio trajectory and compound growth assessment
-2. Best performers and sectors to watch over 3 years
-3. Key risks that could affect the ${currentScenario} scenario
-4. Strategic tips to maximise returns (rebalancing, SIP additions, timing)
-
-Use **bold** for key terms. Be specific about Indian market dynamics. Keep it concise but insightful.`;
+  var prompt='You are a senior Indian equity research analyst. Today is '+today+'. '+
+    'Portfolio: '+holdings+'. '+
+    'Total invested: '+Math.round(totalInvested)+'. '+
+    'Projected 3Y ('+currentScenario+'): '+Math.round(tot3)+'. '+
+    'Write 3-4 paragraphs: (1) portfolio trajectory (2) best performers (3) risks for '+currentScenario+' scenario (4) tips to maximise returns. '+
+    'Be specific about Indian market dynamics.';
 
   try{
     const d=await callClaude(prompt);
