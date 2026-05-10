@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- MarketEdge Pro v4.2 - 20260510142121 -->
+<!-- MarketEdge Pro v4.3 - 20260510145212 -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -1575,9 +1575,9 @@ function buildStockTable(totalInvested){
       const totalPos=parseFloat(pctFromBuy)>=0;
       const futurePos=parseFloat(pctFromNow)>=0;
       return`<td style="text-align:right;background:${totalPos?'rgba(11,158,116,0.04)':'rgba(217,41,74,0.04)'};">
-        <div class="\${totalPos?'cell-up':'cell-dn'}" style="font-weight:600;">₹\${projPerShare.toLocaleString('en-IN',{maximumFractionDigits:2})}</div>
-        <div style="font-size:9px;color:\${totalPos?'var(--green)':'var(--red)'};">\${totalPos?'+':''}\${pctFromBuy}% from buy</div>
-        <div style="font-size:8px;color:\${futurePos?'var(--text3)':'var(--red)'};">\${futurePos?'+':''}\${pctFromNow}% future</div>
+        <div class="${totalPos?'cell-up':'cell-dn'}" style="font-weight:600;">₹${projPerShare.toLocaleString('en-IN',{maximumFractionDigits:2})}</div>
+        <div style="font-size:9px;color:${totalPos?'var(--green)':'var(--red)'};">${totalPos?'+':''}${pctFromBuy}% from buy</div>
+        <div style="font-size:8px;color:${futurePos?'var(--text3)':'var(--red)'};">${futurePos?'+':''}${pctFromNow}% future</div>
       </td>`;
     });
 
@@ -1594,9 +1594,9 @@ function buildStockTable(totalInvested){
       const effectivePct = pctFromBuy;
       const showRed = !totalPositive || (isBear && parseFloat(pctFromNow)<5);
       return`<td style="text-align:right;">
-        <div class="\${totalPositive?'cell-up':'cell-dn'}" style="font-weight:600;">₹\${Math.round(proj).toLocaleString('en-IN')}</div>
-        <div style="font-size:9px;color:\${totalPositive?'var(--green)':'var(--red)'};">\${totalPositive?'+':''}\${pctFromBuy}% from buy</div>
-        <div style="font-size:8px;color:\${futurePositive?'var(--text3)':'var(--red)'};">\${futurePositive?'+':''}\${pctFromNow}% from now</div>
+        <div class="${totalPositive?'cell-up':'cell-dn'}" style="font-weight:600;">₹${Math.round(proj).toLocaleString('en-IN')}</div>
+        <div style="font-size:9px;color:${totalPositive?'var(--green)':'var(--red)'};">${totalPositive?'+':''}${pctFromBuy}% from buy</div>
+        <div style="font-size:8px;color:${futurePositive?'var(--text3)':'var(--red)'};">${futurePositive?'+':''}${pctFromNow}% from now</div>
       </td>`;
     });
 
