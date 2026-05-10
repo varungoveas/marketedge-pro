@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- MarketEdge Pro v4.3 - 20260510145212 -->
+<!-- MarketEdge Pro v4.5 - 20260510151912 -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -373,6 +373,8 @@ body.dark .ctrl-sel{background-image:url("data:image/svg+xml,%3Csvg xmlns='http:
     <button class="tab-btn" onclick="switchTab('intelligence',this)">📡 Intelligence</button>
     <button class="tab-btn active" onclick="switchTab('portfolio',this)">💼 Portfolio</button>
     <button class="tab-btn" onclick="switchTab('projections',this)">📈 Growth Projections</button>
+    <button class="tab-btn" onclick="switchTab('health',this)">⚖️ Health</button>
+    <button class="tab-btn" onclick="switchTab('news',this)">📰 News</button>
   </div>
   <div class="nav-right">
     <span class="last-update" id="updateTime">—</span>
@@ -600,6 +602,83 @@ body.dark .ctrl-sel{background-image:url("data:image/svg+xml,%3Csvg xmlns='http:
   </div>
 </div>
 
+
+<!-- ═══════ PANEL: PORTFOLIO HEALTH ═══════ -->
+<div class="panel" id="panel-health">
+  <div style="height:14px;"></div>
+  <div id="healthContent">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;">
+
+      <!-- Health Score Card -->
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:22px;">
+        <div style="font-family:'Fraunces',serif;font-size:16px;font-weight:600;color:var(--navy);margin-bottom:16px;">⚖️ Portfolio Health Score</div>
+        <div style="display:flex;align-items:center;gap:20px;margin-bottom:20px;">
+          <div style="position:relative;width:100px;height:100px;flex-shrink:0;">
+            <canvas id="scoreCanvas" width="100" height="100"></canvas>
+            <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+              <div id="scoreNum" style="font-family:'JetBrains Mono',monospace;font-size:26px;font-weight:700;line-height:1;">—</div>
+              <div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;">/100</div>
+            </div>
+          </div>
+          <div>
+            <div id="scoreLabel" style="font-size:15px;font-weight:600;margin-bottom:4px;">—</div>
+            <div id="scoreDesc" style="font-size:12px;color:var(--text2);line-height:1.6;">Calculating...</div>
+          </div>
+        </div>
+        <div id="healthFactors"></div>
+      </div>
+
+      <!-- Concentration Risk -->
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:22px;">
+        <div style="font-family:'Fraunces',serif;font-size:16px;font-weight:600;color:var(--navy);margin-bottom:16px;">🎯 Sector Concentration</div>
+        <div id="sectorBars"></div>
+        <div style="margin-top:14px;padding:10px 12px;background:var(--bg3);border-radius:8px;font-size:11px;color:var(--text2);line-height:1.6;" id="concAdvice">Loading...</div>
+      </div>
+    </div>
+
+    <!-- Risk breakdown table -->
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:22px;margin-bottom:20px;">
+      <div style="font-family:'Fraunces',serif;font-size:16px;font-weight:600;color:var(--navy);margin-bottom:16px;">📊 Stock Risk Breakdown</div>
+      <div id="riskTable"></div>
+    </div>
+
+    <!-- Price Alerts -->
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:22px;">
+      <div style="font-family:'Fraunces',serif;font-size:16px;font-weight:600;color:var(--navy);margin-bottom:4px;">🔔 Set Price Alerts</div>
+      <div style="font-size:11px;color:var(--text3);margin-bottom:16px;">Get a visual alert when any stock hits your target or stop-loss price</div>
+      <div id="alertsList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ PANEL: NEWS ═══════ -->
+<div class="panel" id="panel-news">
+  <div style="height:14px;"></div>
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+    <div>
+      <div style="font-family:'Fraunces',serif;font-size:18px;font-weight:600;color:var(--navy);">📰 Market News & Stock Alerts</div>
+      <div style="font-size:12px;color:var(--text3);margin-top:2px;">AI-curated news relevant to your portfolio holdings</div>
+    </div>
+    <button onclick="fetchPortfolioNews()" id="newsRefreshBtn"
+      style="background:var(--navy);color:#fff;border:none;border-radius:8px;font-family:Inter,sans-serif;font-size:13px;font-weight:500;padding:9px 20px;cursor:pointer;">
+      🔄 Fetch Latest News
+    </button>
+  </div>
+
+  <div id="newsLoader" style="display:none;text-align:center;padding:40px;color:var(--text3);">
+    <div style="font-size:24px;margin-bottom:8px;">⏳</div>
+    <div style="font-size:13px;" id="newsLoaderMsg">Fetching news for your stocks...</div>
+  </div>
+
+  <div id="newsEmpty" style="text-align:center;padding:60px;color:var(--text3);">
+    <div style="font-size:40px;margin-bottom:12px;">📭</div>
+    <div style="font-size:14px;margin-bottom:16px;">Click "Fetch Latest News" to get AI-curated news<br>relevant to your 17 holdings</div>
+    <div style="font-size:11px;color:var(--text3);">Powered by AI · Updates when you click</div>
+  </div>
+
+  <div id="newsGrid" style="display:none;"></div>
+</div>
+
 </div><!-- /wrap -->
 
 <!-- EDIT MODAL -->
@@ -807,6 +886,7 @@ function switchTab(tab, btn) {
   if(btn) btn.classList.add('active');
   if(tab==='portfolio') renderPortfolio();
   if(tab==='projections') initProjections();
+  if(tab==='health') { renderPortfolio(); setTimeout(calcHealthScore, 200); }
 }
 
 // ─── INDICES ─────────────────────────────────────────────────────
@@ -918,6 +998,370 @@ function renderAnalysisBox(text,id,title){
 
 // ─── PORTFOLIO ────────────────────────────────────────────────────
 function savePort(){ try{localStorage.setItem('me_port_v2',JSON.stringify(portfolio));}catch(e){} }
+
+// ═══════════════════════════════════════════════════════════════
+// PORTFOLIO HEALTH SCORE
+// ═══════════════════════════════════════════════════════════════
+function calcHealthScore() {
+  if(!portfolio || portfolio.length === 0) return;
+
+  var factors = [];
+  var totalScore = 0;
+
+  // Factor 1: Diversification (0-25 pts)
+  var sectors = {};
+  portfolio.forEach(function(s){ sectors[s.sector] = (sectors[s.sector]||0) + (s.buy*s.qty); });
+  var sectorCount = Object.keys(sectors).length;
+  var totalInv = portfolio.reduce(function(a,s){ return a+s.buy*s.qty; }, 0);
+  var maxConc = Math.max.apply(null, Object.values(sectors)) / totalInv * 100;
+  var divScore = Math.min(25, sectorCount * 3 + (maxConc < 30 ? 10 : maxConc < 50 ? 5 : 0));
+  totalScore += divScore;
+  factors.push({
+    label: 'Diversification',
+    score: Math.round(divScore),
+    max: 25,
+    status: divScore >= 18 ? 'good' : divScore >= 12 ? 'ok' : 'poor',
+    note: sectorCount + ' sectors · Max concentration ' + maxConc.toFixed(0) + '%'
+  });
+
+  // Factor 2: Win/Loss Ratio (0-25 pts)
+  var winners = 0, losers = 0;
+  portfolio.forEach(function(s){
+    var cur = getCurPrice(s.ticker) || s.buy;
+    if(cur >= s.buy) winners++; else losers++;
+  });
+  var winPct = winners / portfolio.length * 100;
+  var winScore = Math.min(25, winPct * 0.25);
+  totalScore += winScore;
+  factors.push({
+    label: 'Win/Loss Ratio',
+    score: Math.round(winScore),
+    max: 25,
+    status: winPct >= 60 ? 'good' : winPct >= 40 ? 'ok' : 'poor',
+    note: winners + ' profitable · ' + losers + ' in loss (' + winPct.toFixed(0) + '% winning)'
+  });
+
+  // Factor 3: Average loss depth (0-25 pts)
+  var totalPnlPct = 0;
+  portfolio.forEach(function(s){
+    var cur = getCurPrice(s.ticker) || s.buy;
+    totalPnlPct += (cur - s.buy) / s.buy * 100;
+  });
+  var avgPnl = totalPnlPct / portfolio.length;
+  var pnlScore = avgPnl >= 5 ? 25 : avgPnl >= 0 ? 20 : avgPnl >= -5 ? 14 : avgPnl >= -10 ? 8 : 3;
+  totalScore += pnlScore;
+  factors.push({
+    label: 'Average Return',
+    score: Math.round(pnlScore),
+    max: 25,
+    status: pnlScore >= 18 ? 'good' : pnlScore >= 12 ? 'ok' : 'poor',
+    note: 'Avg P&L across holdings: ' + (avgPnl >= 0 ? '+' : '') + avgPnl.toFixed(1) + '%'
+  });
+
+  // Factor 4: Stop-loss discipline (0-25 pts)
+  var deepLosers = portfolio.filter(function(s){
+    var cur = getCurPrice(s.ticker) || s.buy;
+    return (cur - s.buy) / s.buy * 100 < -15;
+  }).length;
+  var slScore = Math.max(0, 25 - deepLosers * 8);
+  totalScore += slScore;
+  factors.push({
+    label: 'Stop-loss Discipline',
+    score: Math.round(slScore),
+    max: 25,
+    status: deepLosers === 0 ? 'good' : deepLosers <= 2 ? 'ok' : 'poor',
+    note: deepLosers + ' stock(s) down >15% — consider cutting losses'
+  });
+
+  var finalScore = Math.round(totalScore);
+
+  // Draw score ring
+  drawScoreRing(finalScore);
+
+  // Score label
+  var label = finalScore >= 75 ? '✅ Healthy Portfolio' : finalScore >= 50 ? '⚠️ Needs Attention' : '🔴 High Risk';
+  var desc = finalScore >= 75
+    ? 'Your portfolio is well-structured. Stay disciplined and review monthly.'
+    : finalScore >= 50
+    ? 'Some areas need attention. Review losing positions and consider rebalancing.'
+    : 'Several risk factors detected. Consider cutting losses and diversifying.';
+
+  document.getElementById('scoreNum').textContent = finalScore;
+  document.getElementById('scoreNum').style.color = finalScore >= 75 ? 'var(--green)' : finalScore >= 50 ? 'var(--amber)' : 'var(--red)';
+  document.getElementById('scoreLabel').textContent = label;
+  document.getElementById('scoreDesc').textContent = desc;
+
+  // Render factors
+  document.getElementById('healthFactors').innerHTML = factors.map(function(f){
+    var color = f.status === 'good' ? 'var(--green)' : f.status === 'ok' ? 'var(--amber)' : 'var(--red)';
+    var barW = (f.score / f.max * 100).toFixed(0);
+    return '<div style="margin-bottom:10px;">'
+      + '<div style="display:flex;justify-content:space-between;margin-bottom:3px;">'
+      + '<span style="font-size:11px;font-weight:500;">' + f.label + '</span>'
+      + '<span style="font-family:JetBrains Mono,monospace;font-size:11px;color:' + color + ';">' + f.score + '/' + f.max + '</span>'
+      + '</div>'
+      + '<div style="height:6px;background:var(--bg4);border-radius:3px;overflow:hidden;margin-bottom:3px;">'
+      + '<div style="height:100%;width:' + barW + '%;background:' + color + ';border-radius:3px;transition:width 1s ease;"></div>'
+      + '</div>'
+      + '<div style="font-size:10px;color:var(--text3);">' + f.note + '</div>'
+      + '</div>';
+  }).join('');
+
+  // Sector concentration bars
+  var sectorEntries = Object.entries(sectors).sort(function(a,b){ return b[1]-a[1]; });
+  document.getElementById('sectorBars').innerHTML = sectorEntries.map(function(e){
+    var pct = (e[1]/totalInv*100).toFixed(1);
+    var color = parseFloat(pct) > 40 ? 'var(--red)' : parseFloat(pct) > 25 ? 'var(--amber)' : 'var(--green)';
+    return '<div style="margin-bottom:8px;">'
+      + '<div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px;">'
+      + '<span style="font-weight:500;">' + e[0] + '</span>'
+      + '<span style="font-family:JetBrains Mono,monospace;color:' + color + ';">' + pct + '%</span>'
+      + '</div>'
+      + '<div style="height:8px;background:var(--bg4);border-radius:4px;overflow:hidden;">'
+      + '<div style="height:100%;width:' + pct + '%;background:' + color + ';border-radius:4px;transition:width 1s ease;"></div>'
+      + '</div>'
+      + '</div>';
+  }).join('');
+
+  // Concentration advice
+  var topSector = sectorEntries[0];
+  var topPct = (topSector[1]/totalInv*100).toFixed(0);
+  var advice = '';
+  if(parseFloat(topPct) > 40) {
+    advice = '⚠️ ' + topPct + '% in ' + topSector[0] + ' — highly concentrated. Consider spreading into other sectors to reduce risk.';
+  } else if(sectorCount < 4) {
+    advice = '⚠️ Only ' + sectorCount + ' sectors — add stocks from IT, Pharma or FMCG for better diversification.';
+  } else {
+    advice = '✅ Good spread across ' + sectorCount + ' sectors. Largest is ' + topSector[0] + ' at ' + topPct + '%.';
+  }
+  document.getElementById('concAdvice').textContent = advice;
+
+  // Risk table
+  var riskRows = portfolio.map(function(s){
+    var cur = getCurPrice(s.ticker) || s.buy;
+    var pct = ((cur-s.buy)/s.buy*100).toFixed(1);
+    var profile = STOCK_PROFILES[s.ticker];
+    var vol = profile ? profile.vol : 'med';
+    var cap = profile ? profile.cap : 'midcap';
+    var risk = vol === 'high' || cap === 'penny' ? 'High' : vol === 'low' || cap === 'etf' ? 'Low' : 'Med';
+    var riskColor = risk === 'High' ? 'var(--red)' : risk === 'Low' ? 'var(--green)' : 'var(--amber)';
+    var pnlColor = parseFloat(pct) >= 0 ? 'var(--green)' : 'var(--red)';
+    return '<tr>'
+      + '<td style="padding:7px 10px;font-family:JetBrains Mono,monospace;font-size:12px;font-weight:700;">' + s.ticker + '</td>'
+      + '<td style="padding:7px 10px;font-size:11px;color:var(--text2);">' + cap + '</td>'
+      + '<td style="padding:7px 10px;text-align:center;"><span style="font-size:10px;font-weight:600;color:' + riskColor + ';background:var(--bg3);padding:2px 8px;border-radius:4px;">' + risk + '</span></td>'
+      + '<td style="padding:7px 10px;text-align:right;font-family:JetBrains Mono,monospace;font-size:11px;color:' + pnlColor + ';">' + (parseFloat(pct)>=0?'+':'') + pct + '%</td>'
+      + '<td style="padding:7px 10px;text-align:right;font-family:JetBrains Mono,monospace;font-size:11px;">₹' + Math.round(s.buy*s.qty).toLocaleString('en-IN') + '</td>'
+      + '</tr>';
+  }).join('');
+
+  document.getElementById('riskTable').innerHTML =
+    '<table style="width:100%;border-collapse:collapse;">'
+    + '<thead><tr style="background:var(--bg3);">'
+    + '<th style="padding:7px 10px;text-align:left;font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--text3);border-bottom:1px solid var(--border);">Stock</th>'
+    + '<th style="padding:7px 10px;text-align:left;font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--text3);border-bottom:1px solid var(--border);">Type</th>'
+    + '<th style="padding:7px 10px;text-align:center;font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--text3);border-bottom:1px solid var(--border);">Risk</th>'
+    + '<th style="padding:7px 10px;text-align:right;font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--text3);border-bottom:1px solid var(--border);">P&L %</th>'
+    + '<th style="padding:7px 10px;text-align:right;font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--text3);border-bottom:1px solid var(--border);">Invested</th>'
+    + '</tr></thead>'
+    + '<tbody>' + riskRows + '</tbody></table>';
+
+  // Price alerts
+  renderPriceAlerts();
+}
+
+function drawScoreRing(score) {
+  var canvas = document.getElementById('scoreCanvas');
+  if(!canvas) return;
+  var ctx = canvas.getContext('2d');
+  var cx = 50, cy = 50, r = 38;
+  ctx.clearRect(0,0,100,100);
+  // Background ring
+  ctx.beginPath();
+  ctx.arc(cx,cy,r,0,Math.PI*2);
+  ctx.strokeStyle = 'var(--bg4)';
+  ctx.lineWidth = 8;
+  ctx.stroke();
+  // Score arc
+  var start = -Math.PI/2;
+  var end = start + (score/100) * Math.PI * 2;
+  ctx.beginPath();
+  ctx.arc(cx,cy,r,start,end);
+  ctx.strokeStyle = score >= 75 ? '#0B9E74' : score >= 50 ? '#C47D0A' : '#D9294A';
+  ctx.lineWidth = 8;
+  ctx.lineCap = 'round';
+  ctx.stroke();
+}
+
+// Price alert storage
+var priceAlerts = JSON.parse(localStorage.getItem('me_alerts')||'{}');
+
+function renderPriceAlerts() {
+  var html = portfolio.map(function(s){
+    var cur = getCurPrice(s.ticker) || s.buy;
+    var alert = priceAlerts[s.ticker] || {};
+    var targetVal = alert.target || '';
+    var stopVal = alert.stop || '';
+    // Check if alert triggered
+    var targetHit = targetVal && cur >= parseFloat(targetVal);
+    var stopHit = stopVal && cur <= parseFloat(stopVal);
+    return '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);flex-wrap:wrap;">'
+      + '<div style="width:90px;font-family:JetBrains Mono,monospace;font-size:12px;font-weight:700;">' + s.ticker + '</div>'
+      + '<div style="font-size:11px;color:var(--text3);width:70px;">Now: <span style="color:var(--text2);font-weight:500;">₹'+cur.toLocaleString('en-IN',{maximumFractionDigits:2})+'</span></div>'
+      + '<div style="display:flex;align-items:center;gap:6px;flex:1;">'
+      + '<span style="font-size:10px;color:var(--green);">🎯 Target:</span>'
+      + '<input type="number" value="' + targetVal + '" placeholder="₹ target"'
+      + ' style="width:90px;background:var(--bg3);border:1px solid '+(targetHit?'var(--green)':'var(--border2)')+';border-radius:5px;color:var(--text);font-size:11px;padding:4px 7px;outline:none;"'
+      + ' onchange="setAlert(this.dataset.t,\'target\',this.value)" data-t="'+s.ticker+'">'
+      + (targetHit ? '<span style="color:var(--green);font-size:11px;font-weight:600;">✅ HIT!</span>' : '')
+      + '</div>'
+      + '<div style="display:flex;align-items:center;gap:6px;flex:1;">'
+      + '<span style="font-size:10px;color:var(--red);">🛑 Stop:</span>'
+      + '<input type="number" value="' + stopVal + '" placeholder="₹ stop-loss"'
+      + ' style="width:90px;background:var(--bg3);border:1px solid '+(stopHit?'var(--red)':'var(--border2)')+';border-radius:5px;color:var(--text);font-size:11px;padding:4px 7px;outline:none;"'
+      + ' onchange="setAlert(this.dataset.t,\'stop\',this.value)" data-t="'+s.ticker+'">'
+      + (stopHit ? '<span style="color:var(--red);font-size:11px;font-weight:600;">🚨 TRIGGERED!</span>' : '')
+      + '</div>'
+      + '</div>';
+  }).join('');
+  document.getElementById('alertsList').innerHTML = html;
+}
+
+function setAlert(ticker, type, value) {
+  if(!priceAlerts[ticker]) priceAlerts[ticker] = {};
+  priceAlerts[ticker][type] = value;
+  localStorage.setItem('me_alerts', JSON.stringify(priceAlerts));
+  renderPriceAlerts();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// NEWS FETCHING
+// ═══════════════════════════════════════════════════════════════
+async function fetchPortfolioNews() {
+  var btn = document.getElementById('newsRefreshBtn');
+  var loader = document.getElementById('newsLoader');
+  var empty = document.getElementById('newsEmpty');
+  var grid = document.getElementById('newsGrid');
+
+  btn.disabled = true;
+  btn.textContent = '⏳ Fetching...';
+  loader.style.display = 'block';
+  empty.style.display = 'none';
+  grid.style.display = 'none';
+
+  var tickers = portfolio.map(function(s){ return s.ticker; }).join(', ');
+  var names = portfolio.map(function(s){ return s.name; }).join(', ');
+
+  var steps = [
+    'Scanning market news for your stocks...',
+    'Analysing sentiment for each holding...',
+    'Identifying relevant events...',
+    'Building your news brief...'
+  ];
+  var si = 0;
+  var newsInterval = setInterval(function(){
+    si = (si+1) % steps.length;
+    document.getElementById('newsLoaderMsg').textContent = steps[si];
+  }, 1800);
+
+  var today = new Date().toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'});
+
+  var prompt = 'You are a financial news analyst for Indian stock market. Today is ' + today + '.'
+    + ' The investor holds these stocks: ' + names + '.'
+    + ' Provide a concise news brief relevant to these holdings.'
+    + ' Return ONLY valid JSON (no markdown):'
+    + ' {"marketSummary":"2 sentence overview of Indian market today",'
+    + '"stockNews":[{"ticker":"TICKER","headline":"News headline","sentiment":"positive/negative/neutral","impact":"high/medium/low","detail":"2 sentence explanation of why this matters to the investor"}],'
+    + '"sectorAlerts":[{"sector":"Sector name","alert":"Key development affecting this sector","sentiment":"positive/negative/neutral"}],'
+    + '"topAction":"Most important action the investor should consider today based on news"}';
+
+  try {
+    var raw = await callClaude(prompt);
+    clearInterval(newsInterval);
+    loader.style.display = 'none';
+
+    var data = null;
+    try { data = JSON.parse(raw.trim()); }
+    catch(e) {
+      var s = raw.indexOf('{'), end = raw.lastIndexOf('}')+1;
+      if(s !== -1 && end > s) try { data = JSON.parse(raw.slice(s,end)); } catch(e2) {}
+    }
+
+    if(data) {
+      renderNews(data);
+      grid.style.display = 'block';
+    } else {
+      empty.style.display = 'block';
+      empty.querySelector('div:nth-child(2)').textContent = 'Could not parse news. Please try again.';
+    }
+  } catch(e) {
+    clearInterval(newsInterval);
+    loader.style.display = 'none';
+    empty.style.display = 'block';
+    empty.querySelector('div').textContent = '⚠️';
+    empty.querySelectorAll('div')[1].innerHTML = 'News requires AI access.<br><a href="https://cors-anywhere.herokuapp.com/corsdemo" target="_blank" style="color:var(--blue);">Activate CORS access first →</a>';
+  }
+
+  btn.disabled = false;
+  btn.textContent = '🔄 Fetch Latest News';
+}
+
+function renderNews(data) {
+  var grid = document.getElementById('newsGrid');
+  var sentColor = function(s) { return s==='positive'?'var(--green)':s==='negative'?'var(--red)':'var(--amber)'; };
+  var impactBg = function(i) { return i==='high'?'var(--red-bg)':i==='medium'?'var(--amber-bg)':'var(--bg3)'; };
+
+  var html = '';
+
+  // Market summary banner
+  if(data.marketSummary) {
+    html += '<div style="background:var(--navy);color:#fff;border-radius:var(--r);padding:16px 20px;margin-bottom:16px;">'
+      + '<div style="font-size:11px;letter-spacing:1px;text-transform:uppercase;opacity:0.7;margin-bottom:6px;">Market Summary · ' + new Date().toLocaleDateString('en-IN') + '</div>'
+      + '<div style="font-size:14px;line-height:1.6;">' + data.marketSummary + '</div>'
+      + '</div>';
+  }
+
+  // Top action
+  if(data.topAction) {
+    html += '<div style="background:var(--amber-bg);border:1px solid rgba(196,125,10,0.3);border-radius:8px;padding:12px 16px;margin-bottom:16px;font-size:13px;">'
+      + "<strong style='color:var(--amber);'>⚡ Today&#39;s Top Action: </strong>" + data.topAction + '</div>';
+  }
+
+  // Sector alerts
+  if(data.sectorAlerts && data.sectorAlerts.length) {
+    html += '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">';
+    data.sectorAlerts.forEach(function(a){
+      html += '<div style="flex:1;min-width:200px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:12px;">'
+        + '<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">'
+        + '<span style="width:8px;height:8px;border-radius:50%;background:' + sentColor(a.sentiment) + ';flex-shrink:0;"></span>'
+        + '<span style="font-size:11px;font-weight:600;color:var(--navy);">' + a.sector + '</span></div>'
+        + '<div style="font-size:11px;color:var(--text2);line-height:1.5;">' + a.alert + '</div></div>';
+    });
+    html += '</div>';
+  }
+
+  // Stock news grid
+  if(data.stockNews && data.stockNews.length) {
+    html += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px;">';
+    data.stockNews.forEach(function(n){
+      var s = portfolio.find(function(p){ return p.ticker===n.ticker; });
+      html += '<div style="background:var(--bg2);border:1px solid var(--border);border-left:3px solid ' + sentColor(n.sentiment) + ';border-radius:var(--r);padding:14px;">'
+        + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">'
+        + '<span style="font-family:JetBrains Mono,monospace;font-size:13px;font-weight:700;">' + n.ticker + '</span>'
+        + '<span style="font-size:9px;padding:2px 7px;border-radius:4px;background:' + impactBg(n.impact) + ';font-weight:600;text-transform:uppercase;">' + n.impact + ' impact</span>'
+        + '</div>'
+        + '<div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:6px;line-height:1.4;">' + n.headline + '</div>'
+        + '<div style="font-size:11px;color:var(--text2);line-height:1.6;">' + n.detail + '</div>'
+        + '<div style="margin-top:8px;font-size:10px;font-weight:600;color:' + sentColor(n.sentiment) + ';">'
+        + (n.sentiment==='positive'?'📈 Positive':n.sentiment==='negative'?'📉 Negative':'➡️ Neutral') + '</div>'
+        + '</div>';
+    });
+    html += '</div>';
+  }
+
+  grid.innerHTML = html;
+}
+
 
 
 
@@ -1341,24 +1785,102 @@ async function analyzePortfolio(){
 // ─── PROJECTIONS ─────────────────────────────────────────────────
 
 // Sector growth rates (annual, base/bull/bear)
-var SECTOR_RATES={
-  Banking:{base:14,bull:22,bear:4},IT:{base:16,bull:26,bear:5},
-  Pharma:{base:13,bull:20,bear:3},FMCG:{base:11,bull:17,bear:4},
-  Auto:{base:15,bull:24,bear:2},Energy:{base:12,bull:20,bear:3},
-  Metals:{base:10,bull:25,bear:-5},Infra:{base:16,bull:28,bear:2},
-  Other:{base:12,bull:18,bear:3}
+// ── REALISTIC PROJECTION MODEL ─────────────────────────────────────
+// Per-stock growth rates based on:
+// 1. Stock-specific analyst consensus (base case)
+// 2. Current price vs buy price (momentum factor)
+// 3. Market cap / volatility tier (small caps more volatile)
+// 4. Sector macro tailwinds/headwinds
+
+var STOCK_PROFILES = {
+  // ticker: { base%, bull%, bear%, volatility:'low/med/high', type:'largecap/midcap/smallcap' }
+  'HYUNDAI':    {base:8,  bull:18, bear:-5,  vol:'low',  cap:'largecap'},  // New listing, uncertain
+  'TATAGOLD':   {base:10, bull:16, bear:2,   vol:'low',  cap:'etf'},       // Gold ETF tracks gold price
+  'SWANDEFENCE':{base:18, bull:35, bear:-8,  vol:'high', cap:'smallcap'},  // Defence boom but volatile
+  'ASHOKLEY':   {base:6,  bull:18, bear:-12, vol:'med',  cap:'largecap'},  // CV cycle dependent
+  'FEDERALBNK': {base:14, bull:22, bear:0,   vol:'med',  cap:'midcap'},    // Strong retail bank
+  'BPCL':       {base:8,  bull:16, bear:-6,  vol:'med',  cap:'largecap'},  // Oil price dependent
+  'BEL':        {base:16, bull:28, bear:2,   vol:'med',  cap:'largecap'},  // Defence PSU, steady
+  'ENGINERSIN': {base:14, bull:24, bear:-2,  vol:'med',  cap:'midcap'},    // Infra capex play
+  'GOLDCASE':   {base:10, bull:16, bear:2,   vol:'low',  cap:'etf'},       // Gold ETF
+  'TDPOWERSYS': {base:18, bull:32, bear:-4,  vol:'high', cap:'smallcap'},  // Industrial power niche
+  'TATSILV':    {base:12, bull:20, bear:-2,  vol:'med',  cap:'etf'},       // Silver ETF
+  'BDL':        {base:15, bull:25, bear:0,   vol:'med',  cap:'midcap'},    // Defence missiles
+  'ADANIPOWER': {base:10, bull:22, bear:-8,  vol:'high', cap:'largecap'},  // Regulatory/Adani risk
+  'BANKINDIA':  {base:8,  bull:18, bear:-6,  vol:'high', cap:'psu'},       // PSU bank, cyclical
+  'UNIONBANK':  {base:8,  bull:18, bear:-6,  vol:'high', cap:'psu'},       // PSU bank, cyclical
+  'SUZLON':     {base:20, bull:40, bear:-15, vol:'high', cap:'smallcap'},  // Renewable energy play
+  'GTLINFRA':   {base:5,  bull:15, bear:-10, vol:'high', cap:'penny'},     // Penny stock, speculative
 };
+
+// Sector fallback rates
+var SECTOR_RATES={
+  Banking:{base:12,bull:20,bear:2},IT:{base:15,bull:24,bear:4},
+  Pharma:{base:12,bull:19,bear:2},FMCG:{base:10,bull:16,bear:3},
+  Auto:{base:12,bull:20,bear:-2},Energy:{base:10,bull:18,bear:-3},
+  Metals:{base:8,bull:22,bear:-8},Infra:{base:14,bull:24,bear:0},
+  Defence:{base:16,bull:28,bear:2},Other:{base:10,bull:16,bear:2}
+};
+
 var PERIODS=[{m:3,label:'3 Months'},{m:6,label:'6 Months'},{m:12,label:'1 Year'},{m:24,label:'2 Years'},{m:36,label:'3 Years'}];
 
-function getRate(sector,scenario){
-  const r=SECTOR_RATES[sector]||SECTOR_RATES.Other;
-  return scenario==='bull'?r.bull:scenario==='bear'?r.bear:r.base;
+function getRate(sector, scenario, ticker, currentPrice, buyPrice) {
+  // Get stock-specific rate if available
+  var profile = ticker ? STOCK_PROFILES[ticker] : null;
+  var base, bull, bear;
+
+  if(profile) {
+    base = profile.base;
+    bull = profile.bull;
+    bear = profile.bear;
+  } else {
+    var r = SECTOR_RATES[sector] || SECTOR_RATES.Other;
+    base = r.base; bull = r.bull; bear = r.bear;
+  }
+
+  // Momentum adjustment: if stock is already down significantly,
+  // bear case is worse (falling knives fall further)
+  // and base case recovery is slower
+  if(currentPrice && buyPrice) {
+    var pct = (currentPrice - buyPrice) / buyPrice * 100;
+    if(pct < -15) {
+      // Significant loss — reduce base, worsen bear
+      base = base * 0.7;
+      bear = bear - 5;
+    } else if(pct < -8) {
+      base = base * 0.85;
+      bear = bear - 2;
+    } else if(pct > 20) {
+      // Already up a lot — reduce bull (less room to run), slight bear risk
+      bull = bull * 0.7;
+      bear = bear - 3;
+    }
+
+    // Volatility dampening for short term (3-6M)
+    // High volatility stocks are less predictable short term
+    if(profile && profile.vol === 'high') {
+      // Wide range of outcomes
+      bull = bull * 1.2;
+      bear = bear * 1.3;
+    }
+  }
+
+  var rate = scenario==='bull' ? bull : scenario==='bear' ? bear : base;
+  return rate;
 }
 
-function projectValue(buyPrice,qty,sector,months,scenario){
-  const annualRate=getRate(sector,scenario)/100;
-  const factor=Math.pow(1+annualRate,months/12);
-  return buyPrice*qty*factor;
+function projectValue(buyPrice, qty, sector, months, scenario, ticker, currentPrice) {
+  // Get rate with momentum adjustment
+  var annualRate = getRate(sector, scenario, ticker, currentPrice||buyPrice, buyPrice) / 100;
+
+  // For very short periods (3M), dampen the rate — less certainty
+  var effectiveMonths = months;
+  if(months <= 3) annualRate = annualRate * 0.6;  // 3M is hard to predict
+  else if(months <= 6) annualRate = annualRate * 0.8;  // 6M still uncertain
+
+  // Compound growth
+  var factor = Math.pow(1 + annualRate, effectiveMonths/12);
+  return buyPrice * qty * factor;
 }
 
 function initProjections(){
@@ -1390,7 +1912,7 @@ function buildProjections(){
   // Timeline cards
   const timeline=document.getElementById('projTimeline');
   timeline.innerHTML=PERIODS.map(p=>{
-    const totalProj=portfolio.reduce((a,s)=>a+projectValue(s.buy,s.qty,s.sector,p.m,currentScenario),0);
+    const totalProj=portfolio.reduce((a,s)=>a+projectValue(s.buy,s.qty,s.sector,p.m,currentScenario,s.ticker,getCurPrice(s.ticker)||s.buy),0);
     const gain=totalProj-totalInvested;
     const pct=(gain/totalInvested*100).toFixed(1);
     const isUp=gain>=0;
@@ -1568,7 +2090,7 @@ function buildStockTable(totalInvested){
 
     // Short-term: show projected price per share (from current price)
     const shortCells=SHORT.map(p=>{
-      const projTotal=projectValue(basePricePerShare,s.qty,s.sector,p.m,currentScenario);
+      const projTotal=projectValue(basePricePerShare,s.qty,s.sector,p.m,currentScenario,s.ticker,basePricePerShare);
       const projPerShare=projTotal/s.qty;
       const pctFromBuy=((projPerShare-s.buy)/s.buy*100).toFixed(1);
       const pctFromNow=((projPerShare-basePricePerShare)/basePricePerShare*100).toFixed(1);
@@ -1584,7 +2106,7 @@ function buildStockTable(totalInvested){
     // Long-term: show projected portfolio value
     // pctFromBuy = total return including current loss/gain (what matters to investor)
     const longCells=LONG.map(p=>{
-      const proj=projectValue(basePricePerShare,s.qty,s.sector,p.m,currentScenario);
+      const proj=projectValue(basePricePerShare,s.qty,s.sector,p.m,currentScenario,s.ticker,basePricePerShare);
       const pctFromBuy=((proj-inv)/inv*100).toFixed(1);   // Total return from what you paid
       const pctFromNow=((proj-basePortVal)/basePortVal*100).toFixed(1); // Future growth only
       const totalPositive=parseFloat(pctFromBuy)>=0;
