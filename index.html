@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- MarketEdge Pro v2.6 - 20260510084956 -->
+<!-- MarketEdge Pro v2.7 - 20260510085701 -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -786,22 +786,8 @@ var chartInstance = null;
 
 // ─── SERVER TIP ──────────────────────────────────────────────────
 function showServerTip(){
-  const msg = `AI features need a web server (not file://).
-
-EASIEST — Python (already on your PC):
-1. Press Windows key, type "cmd", open Command Prompt
-2. Type: cd /d C:\Users\vgoveas\Downloads
-3. Type: python -m http.server 8080
-4. Open browser → http://localhost:8080/marketedge-pro-v2.html
-
-All AI features (Intelligence, Sell/Switch, Projections) will work instantly.
-Keep the Command Prompt open while using the tool.`;
-  if(confirm(msg + '
-
-Copy the command to clipboard?')){
-    navigator.clipboard.writeText('cd /d C:\\Users\\vgoveas\\Downloads && python -m http.server 8080');
-    alert('Command copied! Paste it in Command Prompt (Windows key → cmd).');
-  }
+  alert("AI features work on GitHub Pages. If analysis fails, press F12 > Console and check for errors.");
+}
 }
 
 // ─── THEME TOGGLE ────────────────────────────────────────────────
