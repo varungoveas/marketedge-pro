@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- MarketEdge Pro v4.0 - 20260510140954 -->
+<!-- MarketEdge Pro v4.2 - 20260510142121 -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -479,7 +479,7 @@ body.dark .ctrl-sel{background-image:url("data:image/svg+xml,%3Csvg xmlns='http:
           <select class="fi" id="pExch"><option>NSE</option><option>BSE</option></select>
         </div>
         <div class="fg"><label class="fl">Sector</label>
-          <select class="fi" id="pSec"><option>Banking</option><option>IT</option><option>Pharma</option><option>FMCG</option><option>Auto</option><option>Energy</option><option>Metals</option><option>Infra</option><option>Other</option></select>
+          <select class="fi" id="pSec"><option>Banking</option><option>IT</option><option>Pharma</option><option>FMCG</option><option>Auto</option><option>Energy</option><option>Defence</option><option>Metals</option><option>Infra</option><option>Other</option></select>
         </div>
       </div>
       <div class="fg"><label class="fl">Purchase Date</label><input class="fi" id="pDate" type="date"/></div>
@@ -656,7 +656,7 @@ body.dark .ctrl-sel{background-image:url("data:image/svg+xml,%3Csvg xmlns='http:
 var DEFAULT_PORTFOLIO = [
   {id:1, ticker:'HYUNDAI',    name:'Hyundai Motor India',     buy:2079.13, qty:12,   exchange:'NSE', sector:'Auto',    date:'2026-02-01', signal:'Hold'},
   {id:2, ticker:'TATAGOLD',   name:'Tata Gold ETF',           buy:15.13,   qty:1325, exchange:'NSE', sector:'Other',   date:'2026-02-01', signal:'Hold'},
-  {id:3, ticker:'SWANDEFENCE',name:'Swan Defence & Heavy Ind',buy:1970.05, qty:10,   exchange:'NSE', sector:'Energy',  date:'2026-02-01', signal:'Hold'},
+  {id:3, ticker:'SWANDEFENCE',name:'Swan Defence & Heavy Ind',buy:1970.05, qty:10,   exchange:'NSE', sector:'Defence',  date:'2026-02-01', signal:'Hold'},
   {id:4, ticker:'ASHOKLEY',   name:'Ashok Leyland',           buy:201.14,  qty:100,  exchange:'NSE', sector:'Auto',    date:'2026-02-01', signal:'Hold'},
   {id:5, ticker:'FEDERALBNK', name:'The Federal Bank',        buy:293.39,  qty:40,   exchange:'NSE', sector:'Banking', date:'2026-02-01', signal:'Hold'},
   {id:6, ticker:'BPCL',       name:'Bharat Petroleum Corp',   buy:350.27,  qty:30,   exchange:'NSE', sector:'Energy',  date:'2026-02-01', signal:'Hold'},
@@ -920,6 +920,36 @@ function renderAnalysisBox(text,id,title){
 function savePort(){ try{localStorage.setItem('me_port_v2',JSON.stringify(portfolio));}catch(e){} }
 
 
+
+// Approximate current market prices for switch suggestion stocks (update periodically)
+var SWITCH_PRICES = {
+  'NTPC':       365.20,
+  'POWERGRID':  325.40,
+  'CESC':       185.60,
+  'HDFCBANK':  1752.30,
+  'ICICIBANK':  1398.50,
+  'KOTAKBANK':  2156.80,
+  'MARUTI':    12450.00,
+  'M&M':        3280.50,
+  'BAJAJ-AUTO': 9850.00,
+  'INFY':       1892.40,
+  'TCS':        3950.20,
+  'HCLTECH':    1756.80,
+  'SUNPHARMA':  1892.30,
+  'DRREDDY':    6850.40,
+  'CIPLA':      1650.20,
+  'LT':         3892.50,
+  'IRFC':        198.40,
+  'RVNL':        498.60,
+  'HINDALCO':    752.30,
+  'JSWSTEEL':   1025.40,
+  'HAL':        4892.50,
+  'BDL':        1448.60,
+  'GOLDBEES':     56.42,
+  'NIFTYBEES':   284.50,
+  'HDFCNIFTY':   284.80,
+};
+
 // Switch suggestion database — strong stocks by sector for 1-2M horizon
 var SWITCH_SUGGESTIONS = {
   'Energy': [
@@ -956,6 +986,11 @@ var SWITCH_SUGGESTIONS = {
     {ticker:'HINDALCO',  name:'Hindalco',            reason:'Global aluminium upcycle beginning'},
     {ticker:'JSWSTEEL',  name:'JSW Steel',           reason:'Capacity expansion, China slowdown benefit'},
   ],
+  'Defence': [
+    {ticker:'HAL',       name:'Hindustan Aeronautics',  reason:'Order book at all-time high, export push'},
+    {ticker:'BDL',       name:'Bharat Dynamics Ltd',    reason:'Missile systems demand, strong pipeline'},
+    {ticker:'PARAS DEF', name:'Paras Defence',          reason:'Niche defence electronics, growing orders'},
+  ],
   'Other': [
     {ticker:'GOLDBEES',  name:'Nippon Gold ETF',     reason:'Safe haven, rupee hedge'},
     {ticker:'NIFTYBEES', name:'Nippon Nifty ETF',    reason:'Diversified index exposure'},
@@ -987,7 +1022,7 @@ function autoRefreshSignals(){
     var newSig;
 
     // Sector momentum weights (positive sectors in current Indian market)
-    var bullSectors = ['IT','Banking','Energy','Pharma'];
+    var bullSectors = ['IT','Banking','Energy','Pharma','Defence'];
     var bearSectors = ['Metals','Infra'];
     var isBull = bullSectors.indexOf(s.sector) !== -1;
     var isBear = bearSectors.indexOf(s.sector) !== -1;
@@ -1176,7 +1211,15 @@ function renderPortfolio(){
 
     // Switch suggestion for Sell signals
     const sw = s.signal==='Sell' ? getSwitchSuggestion(s.sector, s.ticker) : null;
-    const swHtml = sw ? `<div style="margin-top:4px;padding:3px 7px;background:rgba(29,78,216,0.07);border:1px solid rgba(29,78,216,0.2);border-radius:5px;font-size:9px;line-height:1.5;"><span style="color:var(--blue);font-weight:600;">→ Switch: ${sw.ticker}</span><div style="color:var(--text3);">${sw.reason}</div></div>` : '';
+    const swPrice = sw ? (SWITCH_PRICES[sw.ticker] || null) : null;
+    const saleProceeds = curPrice * s.qty;
+    const unitsCanBuy = swPrice ? Math.floor(saleProceeds / swPrice) : null;
+    const swHtml = sw ? `<div style="margin-top:4px;padding:4px 7px;background:rgba(29,78,216,0.07);border:1px solid rgba(29,78,216,0.2);border-radius:5px;font-size:9px;line-height:1.6;">
+      <span style="color:var(--blue);font-weight:600;">→ Switch: ${sw.ticker}</span>
+      ${swPrice ? `<span style="color:var(--text3);margin-left:6px;">@ ₹${swPrice.toLocaleString('en-IN')}</span>` : ''}
+      ${unitsCanBuy ? `<span style="color:var(--green);margin-left:6px;font-weight:600;">= ${unitsCanBuy} units</span>` : ''}
+      <div style="color:var(--text3);margin-top:1px;">${sw.reason}</div>
+    </div>` : '';
 
     return`<tr id="row-${s.id}">
       <td><div class="ptick">${s.ticker}</div><div class="pname">${s.name}</div>${swHtml}</td>
@@ -1227,7 +1270,9 @@ function renderPortfolio(){
           + '<div style="font-size:11px;color:var(--text3);margin-bottom:2px;">ENTER</div>'
           + '<div style="font-family:JetBrains Mono,monospace;font-size:13px;font-weight:700;color:var(--blue);">' + sw.ticker + '</div>'
           + '<div style="font-size:10px;color:var(--text2);">' + sw.name + '</div>'
-          + '<div style="font-size:10px;color:var(--text3);margin-top:2px;">' + sw.reason + '</div>'
+          + (function(){ var sp=SWITCH_PRICES[sw.ticker]; var units=sp?Math.floor(curP*s.qty/sp):null;
+            return sp ? '<div style="margin-top:4px;"><span style="font-size:11px;color:var(--text3);">Price: </span><span style="font-family:JetBrains Mono,monospace;font-size:12px;font-weight:600;color:var(--navy);">₹'+sp.toLocaleString('en-IN')+'</span></div>'
+            + (units ? '<div><span style="font-size:11px;color:var(--text3);">You can buy: </span><span style="font-family:JetBrains Mono,monospace;font-size:13px;font-weight:700;color:var(--green);">'+units+' units</span></div>' : '') : ''; })()
           + '</div>'
           + '<div style="flex:1;">'
           + '<div style="font-size:11px;color:var(--text3);margin-bottom:4px;">WHY</div>'
@@ -1525,26 +1570,33 @@ function buildStockTable(totalInvested){
     const shortCells=SHORT.map(p=>{
       const projTotal=projectValue(basePricePerShare,s.qty,s.sector,p.m,currentScenario);
       const projPerShare=projTotal/s.qty;
-      const pctFromCur=((projPerShare-basePricePerShare)/basePricePerShare*100).toFixed(1);
       const pctFromBuy=((projPerShare-s.buy)/s.buy*100).toFixed(1);
-      const up=parseFloat(pctFromCur)>=0;
-      return`<td style="text-align:right;background:${up?'rgba(37,99,235,0.04)':'rgba(217,41,74,0.04)'};">
-        <div class="${up?'cell-up':'cell-dn'}" style="font-weight:600;">₹${projPerShare.toLocaleString('en-IN',{maximumFractionDigits:2})}</div>
-        <div style="font-size:9px;color:var(--text3);">${up?'+':''}${pctFromCur}% from now</div>
-        <div style="font-size:8px;color:var(--text3);opacity:0.7;">${parseFloat(pctFromBuy)>=0?'+':''}${pctFromBuy}% from buy</div>
+      const pctFromNow=((projPerShare-basePricePerShare)/basePricePerShare*100).toFixed(1);
+      const totalPos=parseFloat(pctFromBuy)>=0;
+      const futurePos=parseFloat(pctFromNow)>=0;
+      return`<td style="text-align:right;background:${totalPos?'rgba(11,158,116,0.04)':'rgba(217,41,74,0.04)'};">
+        <div class="\${totalPos?'cell-up':'cell-dn'}" style="font-weight:600;">₹\${projPerShare.toLocaleString('en-IN',{maximumFractionDigits:2})}</div>
+        <div style="font-size:9px;color:\${totalPos?'var(--green)':'var(--red)'};">\${totalPos?'+':''}\${pctFromBuy}% from buy</div>
+        <div style="font-size:8px;color:\${futurePos?'var(--text3)':'var(--red)'};">\${futurePos?'+':''}\${pctFromNow}% future</div>
       </td>`;
     });
 
-    // Long-term: show projected portfolio value (from current value)
+    // Long-term: show projected portfolio value
+    // pctFromBuy = total return including current loss/gain (what matters to investor)
     const longCells=LONG.map(p=>{
       const proj=projectValue(basePricePerShare,s.qty,s.sector,p.m,currentScenario);
-      const pctFromCur=((proj-basePortVal)/basePortVal*100).toFixed(1);
-      const pctFromBuy=((proj-inv)/inv*100).toFixed(1);
-      const up=parseFloat(pctFromCur)>=0;
+      const pctFromBuy=((proj-inv)/inv*100).toFixed(1);   // Total return from what you paid
+      const pctFromNow=((proj-basePortVal)/basePortVal*100).toFixed(1); // Future growth only
+      const totalPositive=parseFloat(pctFromBuy)>=0;
+      const futurePositive=parseFloat(pctFromNow)>=0;
+      // Bear case override — if bear and stock already down, show realistic red
+      const isBear = currentScenario==='bear';
+      const effectivePct = pctFromBuy;
+      const showRed = !totalPositive || (isBear && parseFloat(pctFromNow)<5);
       return`<td style="text-align:right;">
-        <div class="${up?'cell-up':'cell-dn'}">₹${Math.round(proj).toLocaleString('en-IN')}</div>
-        <div style="font-size:9px;color:var(--text3);">${up?'+':''}${pctFromCur}% from now</div>
-        <div style="font-size:8px;color:var(--text3);opacity:0.7;">${parseFloat(pctFromBuy)>=0?'+':''}${pctFromBuy}% from buy</div>
+        <div class="\${totalPositive?'cell-up':'cell-dn'}" style="font-weight:600;">₹\${Math.round(proj).toLocaleString('en-IN')}</div>
+        <div style="font-size:9px;color:\${totalPositive?'var(--green)':'var(--red)'};">\${totalPositive?'+':''}\${pctFromBuy}% from buy</div>
+        <div style="font-size:8px;color:\${futurePositive?'var(--text3)':'var(--red)'};">\${futurePositive?'+':''}\${pctFromNow}% from now</div>
       </td>`;
     });
 
