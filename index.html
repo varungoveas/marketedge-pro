@@ -1,32 +1,34 @@
 <!DOCTYPE html>
-<!-- MarketEdge Pro v3.0 - 20260510091651 -->
+<!-- MarketEdge Pro v3.5 - 20260510131412 -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MarketEdge Pro — Live BSE & NSE Intelligence</title>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@300;400;500;600&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=JetBrains+Mono:wght@300;400;500;600&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 /* ── LIGHT MODE (default) ── */
 :root {
-  --bg:#F4F6FA;--bg2:#FFFFFF;--bg3:#EEF1F8;--bg4:#E4E8F2;
-  --border:#D8DEEC;--border2:#C4CCDE;
-  --gold:#C9860A;--gold2:#E09B12;--gold-dim:#A06A06;
-  --text:#1A1F36;--text2:#4A5270;--text3:#8892AA;
+  --bg:#F2F4F8;--bg2:#FFFFFF;--bg3:#ECEEF4;--bg4:#E2E6EF;
+  --border:#D4D9E8;--border2:#BEC6D8;
+  --gold:#1E3A5F;--gold2:#2952A3;--gold-dim:#152C47;
+  --navy:#1E3A5F;
+  --text:#141B2D;--text2:#3D4E6B;--text3:#7B8BAA;
   --green:#0B9E74;--green-bg:rgba(11,158,116,0.08);
   --red:#D9294A;--red-bg:rgba(217,41,74,0.08);
-  --amber:#C47D0A;--amber-bg:rgba(196,125,10,0.08);
-  --blue:#2563EB;--blue-bg:rgba(37,99,235,0.08);
-  --purple:#7C3AED;--purple-bg:rgba(124,58,237,0.08);
-  --bse:#E05A2B;--nse:#1D6FD4;--r:10px;
-  --nav-bg:rgba(244,246,250,0.95);
-  --shadow:0 1px 4px rgba(0,0,0,0.08);
+  --amber:#B45309;--amber-bg:rgba(180,83,9,0.08);
+  --blue:#1D4ED8;--blue-bg:rgba(29,78,216,0.08);
+  --purple:#5B21B6;--purple-bg:rgba(91,33,182,0.08);
+  --bse:#C2410C;--nse:#1D4ED8;--r:10px;
+  --nav-bg:rgba(242,244,248,0.96);
+  --shadow:0 1px 6px rgba(0,0,0,0.07);
+  --accent:#1E3A5F;
 }
 /* ── DARK MODE ── */
 body.dark {
   --bg:#070B14;--bg2:#0C1220;--bg3:#111827;--bg4:#1A2235;
   --border:#1E2D45;--border2:#263650;
-  --gold:#F0B429;--gold2:#FBBF24;--gold-dim:#92710A;
+  --gold:#7BA7D4;--gold2:#93BCE3;--gold-dim:#4A7FAB;--navy:#7BA7D4;
   --text:#E2E8F7;--text2:#94A3C4;--text3:#566280;
   --green:#10D9A0;--green-bg:rgba(16,217,160,0.08);
   --red:#F43F5E;--red-bg:rgba(244,63,94,0.08);
@@ -53,11 +55,11 @@ body.dark::before{background:radial-gradient(ellipse 600px 400px at 10% 20%,rgba
 nav{padding:12px 0;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--nav-bg);backdrop-filter:blur(14px);z-index:100;box-shadow:var(--shadow);}
 .nav-inner{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
 .logo{display:flex;align-items:baseline;gap:8px;}
-.logo-text{font-family:'Syne',sans-serif;font-size:21px;font-weight:800;color:var(--gold);letter-spacing:-0.5px;}
-.logo-badge{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--text3);background:var(--bg3);border:1px solid var(--border);padding:2px 7px;border-radius:4px;}
+.logo-text{font-family:'Playfair Display',Georgia,serif;font-size:20px;font-weight:700;color:var(--navy);letter-spacing:0px;white-space:nowrap;}
+.logo-badge{font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);background:var(--bg3);border:1px solid var(--border);padding:2px 6px;border-radius:4px;white-space:nowrap;}
 .nav-tabs{display:flex;gap:4px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:4px;}
 .tab-btn{font-family:'Outfit',sans-serif;font-size:12px;font-weight:500;color:var(--text3);background:none;border:none;padding:6px 12px;border-radius:6px;cursor:pointer;transition:all 0.2s;white-space:nowrap;}
-.tab-btn.active{background:var(--gold);color:var(--bg);font-weight:600;}
+.tab-btn.active{background:var(--navy);color:#fff;font-weight:600;}
 .tab-btn:not(.active):hover{color:var(--text);}
 .nav-right{display:flex;align-items:center;gap:10px;}
 .last-update{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text3);}
@@ -75,7 +77,7 @@ nav{padding:12px 0;border-bottom:1px solid var(--border);position:sticky;top:0;b
 .idx-card.amb-card{border-left:3px solid var(--amber);}
 .idx-name{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:2px;text-transform:uppercase;margin-bottom:3px;}
 .bse-card .idx-name{color:var(--bse);}.nse-card .idx-name{color:var(--nse);}.grn-card .idx-name{color:var(--green);}.amb-card .idx-name{color:var(--amber);}
-.idx-val{font-family:'Syne',sans-serif;font-size:18px;font-weight:700;letter-spacing:-0.5px;}
+.idx-val{font-family:'Playfair Display',serif;font-size:17px;font-weight:700;letter-spacing:-0.5px;}
 .idx-chg{font-family:'JetBrains Mono',monospace;font-size:11px;margin-top:2px;}
 .idx-chg.up{color:var(--green);}.idx-chg.dn{color:var(--red);}
 .idx-ico{font-size:20px;opacity:0.35;}
@@ -90,7 +92,7 @@ nav{padding:12px 0;border-bottom:1px solid var(--border);position:sticky;top:0;b
 .ctrl-sel{background:var(--bg3);border:1px solid var(--border2);border-radius:7px;color:var(--text);font-family:'Outfit',sans-serif;font-size:13px;padding:9px 28px 9px 11px;cursor:pointer;outline:none;transition:border-color 0.2s;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23566280' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;}
 .ctrl-sel:focus{border-color:var(--gold);}
 .ctrl-sel option{background:var(--bg3);}
-.run-btn{background:linear-gradient(135deg,var(--gold2),var(--gold-dim));color:#0A0A0A;border:none;border-radius:8px;font-family:'Syne',sans-serif;font-weight:700;font-size:14px;padding:10px 26px;cursor:pointer;transition:all 0.2s;white-space:nowrap;align-self:flex-end;}
+.run-btn{background:var(--navy);color:#fff;border:none;border-radius:8px;font-family:'Outfit',sans-serif;font-weight:700;font-size:14px;padding:10px 26px;cursor:pointer;transition:all 0.2s;white-space:nowrap;align-self:flex-end;}
 .run-btn:hover{opacity:0.9;transform:translateY(-1px);box-shadow:0 4px 20px rgba(240,180,41,0.25);}
 .run-btn:disabled{opacity:0.4;cursor:not-allowed;transform:none;box-shadow:none;}
 
@@ -115,7 +117,7 @@ nav{padding:12px 0;border-bottom:1px solid var(--border);position:sticky;top:0;b
 .pick.top{border-color:rgba(240,180,41,0.3);}
 .pick.top::before{content:'★ TOP PICK';position:absolute;top:10px;right:10px;font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:2px;color:var(--gold);background:rgba(240,180,41,0.1);padding:2px 7px;border-radius:4px;}
 .pick-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px;}
-.pick-ticker{font-family:'Syne',sans-serif;font-size:19px;font-weight:700;}
+.pick-ticker{font-family:'Outfit',sans-serif;font-size:19px;font-weight:700;}
 .xbadge{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1.5px;padding:3px 7px;border-radius:4px;font-weight:600;}
 .xb-bse{background:rgba(255,112,67,0.15);color:var(--bse);}
 .xb-nse{background:rgba(66,165,245,0.15);color:var(--nse);}
@@ -139,7 +141,7 @@ nav{padding:12px 0;border-bottom:1px solid var(--border);position:sticky;top:0;b
 
 /* COMPARE */
 .compare-box{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:20px 22px;margin-bottom:22px;}
-.compare-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:var(--gold);margin-bottom:16px;}
+.compare-title{font-family:'Playfair Display',serif;font-size:14px;font-weight:600;color:var(--gold);margin-bottom:16px;}
 .cmp-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
 .cmp-exch{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1px;width:34px;flex-shrink:0;text-transform:uppercase;}
 .cmp-exch.bse{color:var(--bse);}.cmp-exch.nse{color:var(--nse);}
@@ -152,7 +154,7 @@ nav{padding:12px 0;border-bottom:1px solid var(--border);position:sticky;top:0;b
 
 /* AI BOX */
 .ai-box{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:20px 22px;margin-bottom:18px;}
-.ai-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:var(--gold);margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+.ai-title{font-family:'Playfair Display',serif;font-size:14px;font-weight:600;color:var(--gold);margin-bottom:12px;display:flex;align-items:center;gap:8px;}
 .ai-body{font-size:13.5px;line-height:1.8;color:var(--text2);}
 .ai-body strong{color:var(--text);font-weight:600;}
 .ai-body p{margin-bottom:11px;}.ai-body p:last-child{margin-bottom:0;}
@@ -160,18 +162,18 @@ nav{padding:12px 0;border-bottom:1px solid var(--border);position:sticky;top:0;b
 /* ══════════════════════════════════════════════
    PORTFOLIO TAB
 ══════════════════════════════════════════════ */
-.port-layout{display:flex;flex-direction:row;gap:14px;align-items:flex-start;}.port-layout-right{flex:0 0 auto;width:720px;min-width:0;}
+.port-layout{display:flex;flex-direction:row;gap:12px;align-items:flex-start;}.port-layout-right{flex:1 1 auto;min-width:0;}
 @media(max-width:1060px){.port-layout{flex-direction:column;}.port-layout-right{width:100%;max-width:720px;}}
 
-.port-add-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px;position:sticky;top:74px;}
-.padd-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:var(--gold);margin-bottom:12px;}
+.port-add-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:12px;position:sticky;top:66px;width:200px;flex-shrink:0;}
+.padd-title{font-family:'Outfit',sans-serif;font-size:13px;font-weight:600;color:var(--gold);margin-bottom:12px;}
 .fg{margin-bottom:8px;}
 .fl{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--text3);display:block;margin-bottom:5px;}
 .fi{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:7px;color:var(--text);font-family:'Outfit',sans-serif;font-size:12px;padding:7px 9px;outline:none;transition:border-color 0.2s;}
 .fi:focus{border-color:var(--gold);}
 .fi::placeholder{color:var(--text3);}
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
-.add-btn{width:100%;background:linear-gradient(135deg,var(--gold2),var(--gold-dim));color:#0A0A0A;border:none;border-radius:8px;font-family:'Syne',sans-serif;font-weight:700;font-size:12px;padding:9px;cursor:pointer;transition:all 0.2s;margin-top:2px;}
+.add-btn{width:100%;background:linear-gradient(135deg,var(--gold2),var(--gold-dim));color:#0A0A0A;border:none;border-radius:8px;font-family:'Outfit',sans-serif;font-weight:700;font-size:12px;padding:9px;cursor:pointer;transition:all 0.2s;margin-top:2px;}
 .add-btn:hover{opacity:0.9;box-shadow:0 4px 20px rgba(240,180,41,0.2);}
 .proj-btn{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text2);font-family:'Outfit',sans-serif;font-size:12px;font-weight:500;padding:8px;cursor:pointer;transition:all 0.2s;margin-top:5px;}
 .proj-btn:hover{border-color:var(--purple);color:var(--purple);}
@@ -248,7 +250,7 @@ nav{padding:12px 0;border-bottom:1px solid var(--border);position:sticky;top:0;b
 .proj-card:hover{border-color:var(--border2);transform:translateY(-2px);}
 .proj-card.active-period{border-color:var(--gold);background:rgba(240,180,41,0.04);}
 .proj-month{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:8px;}
-.proj-value{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;margin-bottom:4px;}
+.proj-value{font-family:'Playfair Display',serif;font-size:15px;font-weight:600;margin-bottom:4px;}
 .proj-value.up{color:var(--green);}.proj-value.gd{color:var(--gold);}
 .proj-pct{font-family:'JetBrains Mono',monospace;font-size:11px;}
 .proj-pct.up{color:var(--green);}.proj-pct.dn{color:var(--red);}
@@ -257,7 +259,7 @@ nav{padding:12px 0;border-bottom:1px solid var(--border);position:sticky;top:0;b
 /* Chart canvas area */
 .chart-outer{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:20px 22px;margin-bottom:22px;}
 .chart-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px;}
-.chart-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:var(--gold);}
+.chart-title{font-family:'Playfair Display',serif;font-size:14px;font-weight:600;color:var(--gold);}
 .chart-legend{display:flex;gap:14px;flex-wrap:wrap;}
 .legend-item{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text3);}
 .legend-dot{width:8px;height:8px;border-radius:50%;}
@@ -298,7 +300,7 @@ body.dark .near-col{background:rgba(96,165,250,0.04);}
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(6px);z-index:200;display:none;align-items:center;justify-content:center;padding:20px;}
 .modal-overlay.on{display:flex;}
 .modal{background:var(--bg2);border:1px solid var(--border2);border-radius:14px;padding:28px;width:100%;max-width:440px;animation:fadeUp 0.25s ease;}
-.modal-title{font-family:'Syne',sans-serif;font-size:17px;font-weight:700;color:var(--gold);margin-bottom:6px;}
+.modal-title{font-family:'Playfair Display',serif;font-size:16px;font-weight:700;color:var(--gold);margin-bottom:6px;}
 .modal-sub{font-size:12px;color:var(--text3);margin-bottom:22px;}
 .modal-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;}
 .modal-field{display:flex;flex-direction:column;gap:5px;}
@@ -307,7 +309,7 @@ body.dark .near-col{background:rgba(96,165,250,0.04);}
 .modal-input:focus{border-color:var(--gold);}
 .modal-full{grid-column:1/-1;}
 .modal-actions{display:flex;gap:10px;margin-top:6px;}
-.modal-save{flex:1;background:linear-gradient(135deg,var(--gold2),var(--gold-dim));color:#0A0A0A;border:none;border-radius:8px;font-family:'Syne',sans-serif;font-weight:700;font-size:14px;padding:11px;cursor:pointer;transition:all 0.2s;}
+.modal-save{flex:1;background:linear-gradient(135deg,var(--gold2),var(--gold-dim));color:#0A0A0A;border:none;border-radius:8px;font-family:'Outfit',sans-serif;font-weight:700;font-size:14px;padding:11px;cursor:pointer;transition:all 0.2s;}
 .modal-save:hover{opacity:0.9;}
 .modal-cancel{flex:1;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text2);font-family:'Outfit',sans-serif;font-size:14px;padding:11px;cursor:pointer;transition:all 0.2s;}
 .modal-cancel:hover{border-color:var(--text3);color:var(--text);}
@@ -326,7 +328,7 @@ body.dark .near-col{background:rgba(96,165,250,0.04);}
 
 /* Health score */
 .health-score{display:flex;align-items:center;gap:14px;padding:14px 16px;background:var(--bg3);border-radius:8px;border:1px solid var(--border);margin-bottom:14px;}
-.hs-num{font-family:'Syne',sans-serif;font-size:34px;font-weight:800;line-height:1;}
+.hs-num{font-family:'Outfit',sans-serif;font-size:34px;font-weight:800;line-height:1;}
 .hs-label{font-size:12px;font-weight:600;color:var(--text);}
 .hs-sub{font-size:10px;color:var(--text3);}
 
@@ -551,7 +553,7 @@ body.dark .ctrl-sel{background-image:url("data:image/svg+xml,%3Csvg xmlns='http:
     <!-- Scenario selector -->
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:16px;">
       <div>
-        <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:700;color:var(--gold);">📈 Portfolio Growth Projections</div>
+        <div style="font-family:'Playfair Display',serif;font-size:17px;font-weight:700;color:var(--gold);">📈 Portfolio Growth Projections</div>
         <div style="font-size:12px;color:var(--text3);margin-top:3px;">Based on sector growth rates · Recalculates each time you open this tab · <span id="projCalcTime" style="color:var(--amber);">—</span></div>
       </div>
       <div class="scenario-tabs">
@@ -667,8 +669,8 @@ var DEFAULT_PORTFOLIO = [
   {id:13,ticker:'ADANIPOWER', name:'Adani Power Ltd',         buy:220.11,  qty:25,   exchange:'NSE', sector:'Energy',  date:'2026-02-01', signal:'Hold'},
   {id:14,ticker:'BANKINDIA',  name:'Bank of India',           buy:158.15,  qty:40,   exchange:'NSE', sector:'Banking', date:'2026-02-01', signal:'Hold'},
   {id:15,ticker:'UNIONBANK',  name:'Union Bank of India',     buy:189.36,  qty:30,   exchange:'NSE', sector:'Banking', date:'2026-02-01', signal:'Hold'},
-  {id:16,ticker:'SUZLON',     name:'Suzlon Energy Ltd',       buy:54.97,   qty:10,   exchange:'NSE', sector:'Energy',  date:'2026-02-01', signal:'Hold'},
-  {id:17,ticker:'GTLINFRA',   name:'GTL Infrastructure Ltd',  buy:1.38,    qty:90,   exchange:'NSE', sector:'Infra',   date:'2026-02-01', signal:'Hold'}
+  {id:16,ticker:'SUZLON',     name:'Suzlon Energy Ltd',       buy:40.33,   qty:10,   exchange:'NSE', sector:'Energy',  date:'2026-02-01', signal:'Hold'},
+  {id:17,ticker:'GTLINFRA',   name:'GTL Infrastructure Ltd',  buy:1.17,    qty:90,   exchange:'NSE', sector:'Infra',   date:'2026-02-01', signal:'Hold'}
 ];
 // Fallback prices (last known from Groww, 10 May 2026)
 // These are overridden by live Yahoo Finance fetch on page load
@@ -688,8 +690,8 @@ var CURRENT_PRICES = {
   'ADANIPOWER':   225.33,
   'BANKINDIA':    139.77,
   'UNIONBANK':    166.24,
-  'SUZLON':        54.97,
-  'GTLINFRA':       1.38,
+  'SUZLON':        40.33,
+  'GTLINFRA':       1.17,
 };
 var PRICES_UPDATED = '10 May 2026 (fallback)';
 
@@ -917,6 +919,74 @@ function renderAnalysisBox(text,id,title){
 // ─── PORTFOLIO ────────────────────────────────────────────────────
 function savePort(){ try{localStorage.setItem('me_port_v2',JSON.stringify(portfolio));}catch(e){} }
 
+// ── AUTO SIGNAL REFRESH ─────────────────────────────────────────────
+// Rule-based logic — runs instantly on every page load, no API needed
+// Logic:
+//   SELL  → current price < buy price by >12% (significant loss, cut losses)
+//   BUY   → current price > buy price by >8% AND sector momentum positive
+//           OR current price < buy price by <5% (slight dip = opportunity)
+//   HOLD  → everything else (within normal range)
+function autoRefreshSignals(){
+  var changed = false;
+  portfolio.forEach(function(s){
+    var curPrice = getCurPrice(s.ticker) || s.buy;
+    var pct = ((curPrice - s.buy) / s.buy) * 100;
+    var oldSig = s.signal;
+    var newSig;
+
+    // Sector momentum weights (positive sectors in current Indian market)
+    var bullSectors = ['IT','Banking','Energy','Pharma'];
+    var bearSectors = ['Metals','Infra'];
+    var isBull = bullSectors.indexOf(s.sector) !== -1;
+    var isBear = bearSectors.indexOf(s.sector) !== -1;
+
+    if(pct < -15){
+      // Down >15% — strong sell signal
+      newSig = 'Sell';
+    } else if(pct < -8){
+      // Down 8-15% — hold and watch
+      newSig = 'Hold';
+    } else if(pct > 15 && isBull){
+      // Up >15% in a bull sector — strong buy (add more)
+      newSig = 'Buy';
+    } else if(pct > 8){
+      // Up >8% — hold, let it run
+      newSig = 'Hold';
+    } else if(pct > -5 && pct < 0 && isBull){
+      // Small dip in bull sector — buy opportunity
+      newSig = 'Buy';
+    } else if(pct < -5 && isBear){
+      // Bear sector with losses — sell
+      newSig = 'Sell';
+    } else {
+      newSig = 'Hold';
+    }
+
+    if(newSig !== oldSig){
+      s.signal = newSig;
+      changed = true;
+    }
+  });
+
+  if(changed){
+    savePort();
+    renderPortfolio();
+    // Show a subtle toast notification
+    showSignalToast();
+  }
+}
+
+function showSignalToast(){
+  var toast = document.createElement('div');
+  toast.style.cssText = 'position:fixed;bottom:20px;right:20px;background:var(--navy,#1E3A5F);color:#fff;padding:10px 18px;border-radius:8px;font-size:12px;font-family:Outfit,sans-serif;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,0.15);animation:fadeUp 0.3s ease;';
+  toast.textContent = '✓ Signals refreshed based on current prices';
+  document.body.appendChild(toast);
+  setTimeout(function(){ 
+    toast.style.opacity='0';toast.style.transition='opacity 0.5s';
+    setTimeout(function(){ document.body.removeChild(toast); }, 500);
+  }, 3000);
+}
+
 function addStock(){
   const t=document.getElementById('pTicker').value.trim().toUpperCase();
   const n=document.getElementById('pName').value.trim();
@@ -1019,7 +1089,7 @@ function renderPortfolio(){
       <div class="empty-state">
         <div class="es-ico">📊</div>
         <p>Loading your portfolio...</p>
-        <button id="manualLoadBtn" onclick="loadDefaultPortfolio()" style="margin-top:12px;background:linear-gradient(135deg,var(--gold2),var(--gold-dim));color:#0A0A0A;border:none;border-radius:7px;font-family:'Syne',sans-serif;font-weight:700;font-size:13px;padding:10px 22px;cursor:pointer;">Load My 17 Stocks</button>
+        <button id="manualLoadBtn" onclick="loadDefaultPortfolio()" style="margin-top:12px;background:linear-gradient(135deg,var(--gold2),var(--gold-dim));color:#0A0A0A;border:none;border-radius:7px;font-family:'Outfit',sans-serif;font-weight:700;font-size:13px;padding:10px 22px;cursor:pointer;">Load My 17 Stocks</button>
       </div>
     </td></tr>`;
 
@@ -1113,11 +1183,17 @@ async function analyzePortfolio(){
   }catch(e){
     clearInterval(iv);
     document.getElementById('portLoader').classList.remove('on');
-    document.getElementById('portAiBody').innerHTML=`
-      <div style="background:var(--red-bg);border:1px solid rgba(217,41,74,0.3);border-radius:8px;padding:16px;">
-        <div style="color:var(--red);font-weight:700;margin-bottom:8px;">⚠ AI Unavailable</div>
-        <div style="font-size:12px;color:var(--text2);line-height:1.7;white-space:pre-wrap;">${e.message}</div>
-      </div>`;
+    var isCors = e.message === 'CORS_BLOCKED';
+    document.getElementById('portAiBody').innerHTML=
+      '<div style="background:var(--amber-bg);border:1px solid rgba(180,83,9,0.25);border-radius:8px;padding:16px;">'
+      +'<div style="font-weight:700;margin-bottom:10px;color:var(--amber);">⚡ One-time AI setup needed</div>'
+      +'<div style="font-size:12px;color:var(--text2);line-height:1.9;">'
+      +'<strong>Step 1:</strong> Open this link in a new tab:<br>'
+      +'<a href="https://cors-anywhere.herokuapp.com/corsdemo" target="_blank" style="color:var(--blue);font-weight:600;">→ cors-anywhere.herokuapp.com/corsdemo</a><br><br>'
+      +'<strong>Step 2:</strong> Click <strong>"Request temporary access"</strong> button<br><br>'
+      +'<strong>Step 3:</strong> Come back here and click <strong>AI Sell/Switch Analysis</strong> again<br><br>'
+      +'<span style="font-size:11px;color:var(--text3);">This unlocks the AI for ~1 hour. Free, no login needed.</span>'
+      +'</div></div>';
   }
   btn.disabled=false;btn.textContent='🧠 AI Sell/Switch Analysis';
 }
@@ -1468,63 +1544,46 @@ async function buildProjNarrative(totalInvested){
 
 // ─── HELPERS ─────────────────────────────────────────────────────
 async function callClaude(prompt){
-  const payload = {
+  var payload = {
     model:'claude-sonnet-4-20250514',
     max_tokens:1000,
     messages:[{role:'user',content:prompt}]
   };
-  const target = 'https://api.anthropic.com/v1/messages';
+  var target = 'https://api.anthropic.com/v1/messages';
+  var body = JSON.stringify(payload);
+  var headers = {'Content-Type':'application/json'};
 
-  // Try 1: corsproxy.io (best for POST)
-  try{
-    const res = await fetch('https://corsproxy.io/?url='+encodeURIComponent(target),{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify(payload)
-    });
-    if(res.ok){
-      const d=await res.json();
-      const t=(d.content||[]).map(x=>x.text||'').join('');
-      if(t) return t;
-    }
-  }catch(e){}
+  // Try each proxy with timeout
+  async function tryFetch(url, opts, ms) {
+    var controller = new AbortController();
+    var timer = setTimeout(function(){ controller.abort(); }, ms||8000);
+    try {
+      var r = await fetch(url, Object.assign({signal:controller.signal}, opts));
+      clearTimeout(timer);
+      return r;
+    } catch(e) { clearTimeout(timer); return null; }
+  }
 
-  // Try 2: cors-anywhere via herokuapp
-  try{
-    const res = await fetch('https://cors-anywhere.herokuapp.com/'+target,{
-      method:'POST',
-      headers:{'Content-Type':'application/json','X-Requested-With':'XMLHttpRequest'},
-      body:JSON.stringify(payload)
-    });
-    if(res.ok){
-      const d=await res.json();
-      const t=(d.content||[]).map(x=>x.text||'').join('');
-      if(t) return t;
-    }
-  }catch(e){}
+  // 1. corsproxy.io - most reliable
+  var r1 = await tryFetch('https://corsproxy.io/?url='+encodeURIComponent(target),
+    {method:'POST',headers:headers,body:body}, 10000);
+  if(r1&&r1.ok){var d=await r1.json();var t=(d.content||[]).map(function(x){return x.text||'';}).join('');if(t)return t;}
 
-  // Try 3: Direct (works if opened from claude.ai or a web server)
-  try{
-    const res=await fetch(target,{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify(payload)
-    });
-    if(res.ok){
-      const d=await res.json();
-      return(d.content||[]).map(x=>x.text||'').join('');
-    }
-  }catch(e){}
+  // 2. crossorigin.me
+  var r2 = await tryFetch('https://crossorigin.me/'+target,
+    {method:'POST',headers:headers,body:body}, 8000);
+  if(r2&&r2.ok){var d2=await r2.json();var t2=(d2.content||[]).map(function(x){return x.text||'';}).join('');if(t2)return t2;}
 
-  // All failed — throw helpful message
-  throw new Error(
-    'AI unavailable from local file.\n\n' +
-    'Fix: Open the file from a web server instead of double-clicking it.\n' +
-    'Quickest way:\n' +
-    '  1. Install VS Code + Live Server extension\n' +
-    '  2. Right-click the HTML file → Open with Live Server\n' +
-    '  3. AI features will work instantly at http://localhost:5500'
-  );
+  // 3. cors-anywhere (needs one-time activation at https://cors-anywhere.herokuapp.com/corsdemo)
+  var r3 = await tryFetch('https://cors-anywhere.herokuapp.com/'+target,
+    {method:'POST',headers:Object.assign({'X-Requested-With':'XMLHttpRequest'},headers),body:body}, 8000);
+  if(r3&&r3.ok){var d3=await r3.json();var t3=(d3.content||[]).map(function(x){return x.text||'';}).join('');if(t3)return t3;}
+
+  // 4. Direct (works if browser CORS policy allows)
+  var r4 = await tryFetch(target,{method:'POST',headers:headers,body:body},8000);
+  if(r4&&r4.ok){var d4=await r4.json();return(d4.content||[]).map(function(x){return x.text||'';}).join('');}
+
+  throw new Error('CORS_BLOCKED');
 }
 
 function parseJSON(raw){
@@ -1604,6 +1663,9 @@ function resetToMyPortfolio(){
 
   // Live prices
   setTimeout(function(){ try{ fetchLivePrices(); }catch(e){} }, 1500);
+
+  // Auto-refresh signals 3s after load
+  setTimeout(function(){ try{ if(portfolio&&portfolio.length>0) autoRefreshSignals(); }catch(e){} }, 3000);
 })();
 </script>
 </body>
