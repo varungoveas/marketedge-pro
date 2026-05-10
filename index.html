@@ -351,7 +351,7 @@ body.dark .data-notice{border-color:rgba(96,165,250,0.2);}
 body.dark .ctrl-sel{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23566280' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");}
 </style>
 </head>
-<body onload="if(typeof window._loaded==='undefined'){window._loaded=true;if(window.onload)window.onload();}">
+<body>
 
 <nav>
 <div class="wrap nav-inner">
@@ -1029,8 +1029,7 @@ function renderPortfolio(){
         <button id="manualLoadBtn" onclick="loadDefaultPortfolio()" style="margin-top:12px;background:linear-gradient(135deg,var(--gold2),var(--gold-dim));color:#0A0A0A;border:none;border-radius:7px;font-family:'Syne',sans-serif;font-weight:700;font-size:13px;padding:10px 22px;cursor:pointer;">Load My 17 Stocks</button>
       </div>
     </td></tr>`;
-    // Auto-load after 500ms if still empty
-    setTimeout(function(){ if(portfolio.length===0){ loadDefaultPortfolio(); } }, 500);
+
     ['sumTotal','sumCurr','sumPnl'].forEach(id=>set(id,'₹0'));set('sumCount','0');
     document.getElementById('portAlerts').innerHTML='';
     apb.disabled=true;return;
@@ -1565,50 +1564,49 @@ function resetToMyPortfolio(){
 }
 
 // ─── INIT — runs after full DOM + JS parsed ──────────────────────
-window.onload = function() {
-
-  // 1. Apply saved theme
+// Init called from bottom of page
+</script>
+<script>
+// ── GUARANTEED INIT - runs last, after everything is parsed ──────
+(function() {
+  // Theme
   try {
-    const savedTheme = localStorage.getItem('me_theme');
-    if(savedTheme === 'dark') {
+    if(localStorage.getItem('me_theme')==='dark'){
       document.body.classList.add('dark');
-      const tb = document.getElementById('themeBtn');
-      if(tb) tb.textContent = '☀️';
+      var tb=document.getElementById('themeBtn');
+      if(tb) tb.textContent='☀️';
     }
   } catch(e){}
 
-  // 2. Render index ticker (DOM now guaranteed ready)
-  try { renderIdx(); } catch(e) { console.warn('renderIdx error:', e); }
-  setInterval(() => { try { renderIdx(); } catch(e){} }, 60000);
+  // Indices
+  try { renderIdx(); } catch(e){ console.warn(e); }
+  setInterval(function(){ try{ renderIdx(); }catch(e){} }, 60000);
 
-  // 3. Set today's date in add form
+  // Date field
   try {
-    const dateEl = document.getElementById('pDate');
-    if(dateEl) dateEl.value = new Date().toISOString().split('T')[0];
+    var d=document.getElementById('pDate');
+    if(d) d.value=new Date().toISOString().split('T')[0];
   } catch(e){}
 
-  // 4. Set price date label
+  // Price label
   try {
-    const pdEl = document.getElementById('priceDate');
-    if(pdEl) pdEl.textContent = PRICES_UPDATED;
+    var pl=document.getElementById('priceDate');
+    if(pl) pl.textContent=PRICES_UPDATED;
   } catch(e){}
 
-  // 5. Force-load default portfolio if empty
-  if(!portfolio || portfolio.length === 0) {
-    portfolio = JSON.parse(JSON.stringify(DEFAULT_PORTFOLIO));
-    try {
-      localStorage.setItem('me_port_v2', JSON.stringify(portfolio));
-      localStorage.setItem('me_port_version', 'feb2026');
-    } catch(e){}
-  }
+  // Portfolio - force load default if empty
+  try {
+    if(!portfolio || portfolio.length===0){
+      portfolio=JSON.parse(JSON.stringify(DEFAULT_PORTFOLIO));
+      localStorage.setItem('me_port_v2',JSON.stringify(portfolio));
+      localStorage.setItem('me_port_version','feb2026');
+    }
+    renderPortfolio();
+  } catch(e){ console.error('Portfolio init failed:',e); }
 
-  // 6. Render portfolio
-  try { renderPortfolio(); } catch(e) { console.error('renderPortfolio error:', e); }
-
-  // 7. Fetch live prices after 1.5s
-  setTimeout(() => { try { fetchLivePrices(); } catch(e){} }, 1500);
-
-}; // end window.onload
+  // Live prices
+  setTimeout(function(){ try{ fetchLivePrices(); }catch(e){} }, 1500);
+})();
 </script>
 </body>
 </html>
