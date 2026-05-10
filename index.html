@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- MarketEdge Pro v2.6 - 20260510084956 -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -350,8 +351,15 @@ body.dark .data-notice{border-color:rgba(96,165,250,0.2);}
 .ctrl-sel{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%238892AA' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");}
 body.dark .ctrl-sel{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23566280' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");}
 </style>
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
 </head>
 <body>
+<div id="jsStatus" style="display:none;position:fixed;top:0;left:0;right:0;background:#d9294a;color:white;padding:10px;text-align:center;font-family:sans-serif;font-size:14px;z-index:9999;">
+  ⚠ JavaScript error — please open browser console (F12) and share the error with support
+</div>
+<noscript><div style="padding:40px;text-align:center;font-size:18px;">Please enable JavaScript to use MarketEdge Pro.</div></noscript>
 
 <nav>
 <div class="wrap nav-inner">
@@ -643,7 +651,7 @@ body.dark .ctrl-sel{background-image:url("data:image/svg+xml,%3Csvg xmlns='http:
 
 <script>
 // ─── GLOBAL STATE ────────────────────────────────────────────────
-const DEFAULT_PORTFOLIO = [
+var DEFAULT_PORTFOLIO = [
   {id:1, ticker:'HYUNDAI',    name:'Hyundai Motor India',     buy:2079.13, qty:12,   exchange:'NSE', sector:'Auto',    date:'2026-02-01', signal:'Hold'},
   {id:2, ticker:'TATAGOLD',   name:'Tata Gold ETF',           buy:15.13,   qty:1325, exchange:'NSE', sector:'Other',   date:'2026-02-01', signal:'Hold'},
   {id:3, ticker:'SWANDEFENCE',name:'Swan Defence & Heavy Ind',buy:1970.05, qty:10,   exchange:'NSE', sector:'Energy',  date:'2026-02-01', signal:'Hold'},
@@ -664,7 +672,7 @@ const DEFAULT_PORTFOLIO = [
 ];
 // Fallback prices (last known from Groww, 10 May 2026)
 // These are overridden by live Yahoo Finance fetch on page load
-let CURRENT_PRICES = {
+var CURRENT_PRICES = {
   'HYUNDAI':     1852.80,
   'TATAGOLD':      14.59,
   'SWANDEFENCE': 1865.70,
@@ -683,10 +691,10 @@ let CURRENT_PRICES = {
   'SUZLON':        54.97,
   'GTLINFRA':       1.38,
 };
-let PRICES_UPDATED = '10 May 2026 (fallback)';
+var PRICES_UPDATED = '10 May 2026 (fallback)';
 
 // Yahoo Finance ticker map: our key → Yahoo symbol
-const YAHOO_SYMBOLS = {
+var YAHOO_SYMBOLS = {
   'HYUNDAI':    'HYUNDAI.NS',
   'TATAGOLD':   'TATAGOLD.NS',
   'SWANDEFENCE':'SWANDEFENCE.NS',
@@ -760,28 +768,21 @@ async function fetchLivePrices() {
   if(priceBtn){ priceBtn.disabled=false; priceBtn.textContent='⟳ Refresh Prices'; }
 }
 
-let portfolio;
+// Global portfolio - always initialized to default
+var portfolio = JSON.parse(JSON.stringify(DEFAULT_PORTFOLIO));
 try {
-  const stored = localStorage.getItem('me_port_v2');
-  const storedVersion = localStorage.getItem('me_port_version');
-  if (stored && storedVersion === 'feb2026') {
-    const parsed = JSON.parse(stored);
-    // Only use stored if it has actual holdings
-    portfolio = (parsed && parsed.length > 0) ? parsed : JSON.parse(JSON.stringify(DEFAULT_PORTFOLIO));
-  } else {
-    portfolio = JSON.parse(JSON.stringify(DEFAULT_PORTFOLIO));
+  var _stored = localStorage.getItem('me_port_v2');
+  var _ver = localStorage.getItem('me_port_version');
+  if (_stored && _ver === 'feb2026') {
+    var _parsed = JSON.parse(_stored);
+    if (_parsed && _parsed.length > 0) portfolio = _parsed;
   }
-} catch(e) {
-  portfolio = JSON.parse(JSON.stringify(DEFAULT_PORTFOLIO));
-}
-// Always save back so it persists
-try {
   localStorage.setItem('me_port_v2', JSON.stringify(portfolio));
   localStorage.setItem('me_port_version', 'feb2026');
 } catch(e) {}
-let currentScenario = 'base';
-let projData = null;
-let chartInstance = null;
+var currentScenario = 'base';
+var projData = null;
+var chartInstance = null;
 
 // ─── SERVER TIP ──────────────────────────────────────────────────
 function showServerTip(){
@@ -822,7 +823,7 @@ function switchTab(tab, btn) {
 }
 
 // ─── INDICES ─────────────────────────────────────────────────────
-const BASE_IDX = {s:74253,n:22567,b:48432,v:13.4};
+var BASE_IDX = {s:74253,n:22567,b:48432,v:13.4};
 function jit(base,p){return base+(Math.random()-0.5)*2*base*p/100;}
 function fmt(n){return n.toLocaleString('en-IN',{maximumFractionDigits:2});}
 function renderIdx(){
@@ -843,9 +844,9 @@ function refreshIdx(){const b=document.getElementById('refreshBtn');b.classList.
 // Auto-refresh every 60s (started in initApp)
 
 // ─── LOADER STEPS ────────────────────────────────────────────────
-const INT_STEPS=['Fetching BSE top movers...','Scanning NIFTY 50...','Computing RSI & momentum...','Running sector analysis...','Generating AI picks...'];
-const PORT_STEPS=['Evaluating each holding...','Checking sector rotation...','Identifying underperformers...','Finding switch candidates...','Building report...'];
-const PROJ_STEPS=['Modelling 3-month trajectory...','Projecting 6-month growth...','Calculating 12-month target...','Running 2-year compound model...','Building 3-year forecast...','Applying sector growth rates...'];
+var INT_STEPS=['Fetching BSE top movers...','Scanning NIFTY 50...','Computing RSI & momentum...','Running sector analysis...','Generating AI picks...'];
+var PORT_STEPS=['Evaluating each holding...','Checking sector rotation...','Identifying underperformers...','Finding switch candidates...','Building report...'];
+var PROJ_STEPS=['Modelling 3-month trajectory...','Projecting 6-month growth...','Calculating 12-month target...','Running 2-year compound model...','Building 3-year forecast...','Applying sector growth rates...'];
 function startSteps(id,steps){let i=0;document.getElementById(id).textContent=steps[0];return setInterval(()=>{i=(i+1)%steps.length;document.getElementById(id).textContent=steps[i];},1800);}
 
 // ─── INTELLIGENCE ────────────────────────────────────────────────
@@ -922,7 +923,7 @@ function renderAnalysisBox(text,id,title){
 }
 
 // ─── PORTFOLIO ────────────────────────────────────────────────────
-function savePort(){localStorage.setItem('me_port_v2',JSON.stringify(portfolio));}
+function savePort(){ try{localStorage.setItem('me_port_v2',JSON.stringify(portfolio));}catch(e){} }
 
 function addStock(){
   const t=document.getElementById('pTicker').value.trim().toUpperCase();
@@ -942,7 +943,7 @@ function addStock(){
 function deleteStock(id){portfolio=portfolio.filter(s=>s.id!==id);savePort();renderPortfolio();}
 
 // ─── EDIT MODAL ───────────────────────────────────────────────────
-let editingId = null;
+var editingId = null;
 
 function openEdit(id) {
   const s = portfolio.find(x => x.id === id);
@@ -1125,14 +1126,14 @@ async function analyzePortfolio(){
 // ─── PROJECTIONS ─────────────────────────────────────────────────
 
 // Sector growth rates (annual, base/bull/bear)
-const SECTOR_RATES={
+var SECTOR_RATES={
   Banking:{base:14,bull:22,bear:4},IT:{base:16,bull:26,bear:5},
   Pharma:{base:13,bull:20,bear:3},FMCG:{base:11,bull:17,bear:4},
   Auto:{base:15,bull:24,bear:2},Energy:{base:12,bull:20,bear:3},
   Metals:{base:10,bull:25,bear:-5},Infra:{base:16,bull:28,bear:2},
   Other:{base:12,bull:18,bear:3}
 };
-const PERIODS=[{m:3,label:'3 Months'},{m:6,label:'6 Months'},{m:12,label:'1 Year'},{m:24,label:'2 Years'},{m:36,label:'3 Years'}];
+var PERIODS=[{m:3,label:'3 Months'},{m:6,label:'6 Months'},{m:12,label:'1 Year'},{m:24,label:'2 Years'},{m:36,label:'3 Years'}];
 
 function getRate(sector,scenario){
   const r=SECTOR_RATES[sector]||SECTOR_RATES.Other;
@@ -1598,11 +1599,18 @@ function resetToMyPortfolio(){
   try {
     if(!portfolio || portfolio.length===0){
       portfolio=JSON.parse(JSON.stringify(DEFAULT_PORTFOLIO));
-      localStorage.setItem('me_port_v2',JSON.stringify(portfolio));
-      localStorage.setItem('me_port_version','feb2026');
+      try{localStorage.setItem('me_port_v2',JSON.stringify(portfolio));
+      localStorage.setItem('me_port_version','feb2026');}catch(e){}
     }
     renderPortfolio();
-  } catch(e){ console.error('Portfolio init failed:',e); }
+    // Hide error div if we got here
+    var st=document.getElementById('jsStatus');
+    if(st) st.style.display='none';
+  } catch(e){ 
+    console.error('Portfolio init failed:',e);
+    var st=document.getElementById('jsStatus');
+    if(st){ st.style.display='block'; st.textContent='⚠ JS Error: '+e.message+' — F12 for details'; }
+  }
 
   // Live prices
   setTimeout(function(){ try{ fetchLivePrices(); }catch(e){} }, 1500);
