@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- MarketEdge Pro v4.5 - 20260510151912 -->
+<!-- MarketEdge Pro v4.7 - 20260511052031 -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -379,7 +379,7 @@ body.dark .ctrl-sel{background-image:url("data:image/svg+xml,%3Csvg xmlns='http:
   <div class="nav-right">
     <span class="last-update" id="updateTime">—</span>
     <button class="refresh-btn" id="refreshBtn" onclick="refreshIdx()"><span class="si">↻</span> Refresh</button>
-    <button class="refresh-btn" id="serverBtn" onclick="showServerTip()" title="Enable AI features" style="color:var(--amber);border-color:rgba(196,125,10,0.3);" id="serverHint">⚡ Enable AI</button>
+    <button class="refresh-btn" onclick="manageApiKey()" title="Set free Gemini API key" style="color:var(--green);border-color:rgba(11,158,116,0.3);">🔑 AI Key</button>
     <button class="theme-btn" id="themeBtn" onclick="toggleTheme()" title="Toggle light/dark mode">🌙</button>
   </div>
 </div>
@@ -797,32 +797,47 @@ var YAHOO_SYMBOLS = {
 
 // ── LIVE PRICE FETCH via Yahoo Finance (free, ~15 min delay) ──────
 async function fetchLivePrices() {
-  const priceBtn = document.getElementById('livePriceBtn');
-  const priceStatus = document.getElementById('priceStatus');
+  var priceBtn = document.getElementById('livePriceBtn');
+  var priceStatus = document.getElementById('priceStatus');
   if(priceBtn) { priceBtn.disabled=true; priceBtn.textContent='⟳ Fetching...'; }
   if(priceStatus) priceStatus.textContent = 'Fetching live prices…';
 
-  const tickers = Object.values(YAHOO_SYMBOLS).join(',');
-  // Yahoo Finance v7 quote API — free, no key needed
-  const yahooUrl = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${tickers}&fields=regularMarketPrice,symbol`;
-  const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(yahooUrl)}`;
-  const proxyUrl2 = `https://api.allorigins.win/raw?url=${encodeURIComponent(yahooUrl)}`;
+  var tickers = Object.values(YAHOO_SYMBOLS).join(',');
+  var reverseMap = {};
+  Object.entries(YAHOO_SYMBOLS).forEach(function(e){ reverseMap[e[1]]=e[0]; });
 
-  let fetched = 0;
-  for(const url of [proxyUrl, proxyUrl2]){
+  // Multiple Yahoo Finance endpoints + proxies to try
+  var yahooUrl = 'https://query1.finance.yahoo.com/v7/finance/quote?symbols='+tickers+'&fields=regularMarketPrice,symbol';
+  var yahooUrl2 = 'https://query2.finance.yahoo.com/v7/finance/quote?symbols='+tickers+'&fields=regularMarketPrice,symbol';
+
+  var endpoints = [
+    'https://corsproxy.io/?url='+encodeURIComponent(yahooUrl),
+    'https://corsproxy.io/?url='+encodeURIComponent(yahooUrl2),
+    'https://api.allorigins.win/raw?url='+encodeURIComponent(yahooUrl),
+    'https://api.allorigins.win/raw?url='+encodeURIComponent(yahooUrl2),
+    'https://corsproxy.io/?'+encodeURIComponent(yahooUrl),
+    'https://thingproxy.freeboard.io/fetch/'+yahooUrl,
+  ];
+
+  var fetched = 0;
+
+  for(var i=0; i<endpoints.length; i++){
     try{
-      const res = await fetch(url, {headers:{'Accept':'application/json'}});
+      var controller = new AbortController();
+      var timer = setTimeout(function(){ controller.abort(); }, 8000);
+      var res = await fetch(endpoints[i], {
+        signal: controller.signal,
+        headers: {'Accept':'application/json'}
+      });
+      clearTimeout(timer);
+
       if(!res.ok) continue;
-      const data = await res.json();
-      const results = data?.quoteResponse?.result || [];
+      var data = await res.json();
+      var results = (data && data.quoteResponse && data.quoteResponse.result) || [];
       if(!results.length) continue;
 
-      // Reverse-map Yahoo symbol → our ticker key
-      const reverseMap = {};
-      Object.entries(YAHOO_SYMBOLS).forEach(([k,v])=>reverseMap[v]=k);
-
-      results.forEach(q => {
-        const key = reverseMap[q.symbol];
+      results.forEach(function(q){
+        var key = reverseMap[q.symbol];
         if(key && q.regularMarketPrice){
           CURRENT_PRICES[key] = parseFloat(q.regularMarketPrice.toFixed(2));
           fetched++;
@@ -830,23 +845,128 @@ async function fetchLivePrices() {
       });
 
       if(fetched > 0){
-        const now = new Date();
+        var now = new Date();
         PRICES_UPDATED = now.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})
           +' '+now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})
-          +' (Yahoo ~15min delay)';
-        const pdEl=document.getElementById('priceDate');
-        if(pdEl) pdEl.textContent=PRICES_UPDATED;
-        if(priceStatus) priceStatus.innerHTML=`<span style="color:var(--green)">✓ Updated ${fetched} prices</span>`;
+          +' (Yahoo live)';
+        var pdEl = document.getElementById('priceDate');
+        if(pdEl) pdEl.textContent = PRICES_UPDATED;
+        if(priceStatus) priceStatus.innerHTML = '<span style="color:var(--green)">✓ Updated '+fetched+' prices live</span>';
         renderPortfolio();
+        setTimeout(function(){ try{ autoRefreshSignals(); }catch(e){}}, 300);
         break;
       }
-    }catch(e){ console.warn('Yahoo fetch failed:', e); }
+    }catch(e){ /* try next endpoint */ }
   }
 
-  if(fetched===0){
-    if(priceStatus) priceStatus.innerHTML=`<span style="color:var(--red)">⚠ Could not fetch live prices — using last known</span>`;
+  if(fetched === 0){
+    // Yahoo completely blocked — offer manual update via Gemini
+    if(priceStatus) priceStatus.innerHTML =
+      '<span style="color:var(--amber)">⚠ Yahoo blocked · </span>' +
+      '<a href="#" onclick="fetchPricesViaAI();return false;" style="color:var(--blue);font-size:11px;font-weight:600;">Try AI prices →</a>' +
+      '<span style="color:var(--text3);font-size:10px;"> or </span>' +
+      '<a href="#" onclick="manualPriceUpdate();return false;" style="color:var(--blue);font-size:11px;font-weight:600;">Enter manually →</a>';
   }
+
   if(priceBtn){ priceBtn.disabled=false; priceBtn.textContent='⟳ Refresh Prices'; }
+}
+
+// Fetch prices via Gemini AI as fallback
+async function fetchPricesViaAI() {
+  var priceStatus = document.getElementById('priceStatus');
+  if(priceStatus) priceStatus.textContent = '🤖 Fetching prices via AI...';
+
+  var names = portfolio.map(function(s){ return s.ticker+' ('+s.name+')'; }).join(', ');
+  var today = new Date().toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'});
+
+  var prompt = 'You are a financial data assistant. Today is '+today+'. '+
+    'Provide approximate current NSE market prices for these Indian stocks: '+names+'. '+
+    'Return ONLY valid JSON, no markdown: {"prices":{"HYUNDAI":1852,"TATAGOLD":14.59,"SWANDEFENCE":1865,"ASHOKLEY":168,"FEDERALBNK":297,"BPCL":302,"BEL":439,"ENGINERSIN":256,"GOLDCASE":23,"TDPOWERSYS":1219,"TATSILV":24,"BDL":1448,"ADANIPOWER":225,"BANKINDIA":139,"UNIONBANK":166,"SUZLON":54,"GTLINFRA":1.38}}';
+
+  try {
+    var raw = await callClaude(prompt);
+    var data = null;
+    try { data = JSON.parse(raw.trim()); } catch(e) {
+      var s=raw.indexOf('{'), end=raw.lastIndexOf('}')+1;
+      if(s!==-1&&end>s) try{ data=JSON.parse(raw.slice(s,end)); }catch(e2){}
+    }
+
+    if(data && data.prices) {
+      var fetched = 0;
+      Object.entries(data.prices).forEach(function(e){
+        if(CURRENT_PRICES.hasOwnProperty(e[0]) && e[1] > 0){
+          CURRENT_PRICES[e[0]] = parseFloat(e[1]);
+          fetched++;
+        }
+      });
+      var now = new Date();
+      PRICES_UPDATED = now.toLocaleDateString('en-IN',{day:'numeric',month:'short'})
+        +' '+now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})
+        +' (AI estimate)';
+      var pdEl = document.getElementById('priceDate');
+      if(pdEl) pdEl.textContent = PRICES_UPDATED;
+      if(priceStatus) priceStatus.innerHTML = '<span style="color:var(--green)">✓ Updated '+fetched+' prices via AI</span>';
+      renderPortfolio();
+      autoRefreshSignals();
+    }
+  } catch(e) {
+    if(priceStatus) priceStatus.innerHTML = '<span style="color:var(--red)">AI price fetch failed. Try manual update.</span>';
+  }
+}
+
+// Manual price update - user types current prices from Groww
+function manualPriceUpdate() {
+  var modal = document.createElement('div');
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:500;display:flex;align-items:center;justify-content:center;padding:20px;';
+  
+  var box = '<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:24px;width:100%;max-width:500px;max-height:80vh;overflow-y:auto;">';
+  box += '<div style="font-family:Fraunces,serif;font-size:16px;font-weight:600;color:var(--navy);margin-bottom:4px;">📱 Update Prices from Groww</div>';
+  box += '<div style="font-size:11px;color:var(--text3);margin-bottom:16px;">Open your Groww app and enter today&#39;s market price for each stock</div>';
+  
+  portfolio.forEach(function(s){
+    var cur = CURRENT_PRICES[s.ticker] || s.buy;
+    box += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">';
+    box += '<div style="font-family:JetBrains Mono,monospace;font-size:12px;font-weight:700;width:110px;flex-shrink:0;">'+s.ticker+'</div>';
+    box += '<div style="font-size:11px;color:var(--text3);flex:1;">'+s.name+'</div>';
+    box += '<input type="number" id="mprice_'+s.ticker+'" value="'+cur+'" style="width:90px;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;color:var(--text);font-size:12px;padding:5px 8px;text-align:right;">';
+    box += '</div>';
+  });
+
+  box += '<div style="display:flex;gap:10px;margin-top:16px;">';
+  box += '<button onclick="saveManualPrices()" style="flex:1;background:var(--navy);color:#fff;border:none;border-radius:8px;padding:10px;font-size:13px;cursor:pointer;font-family:Inter,sans-serif;font-weight:500;">Save Prices</button>';
+  box += '<button onclick="closeManualModal()" style="flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px;font-size:13px;cursor:pointer;">Cancel</button>';
+  box += '</div></div>';
+
+  modal.setAttribute('data-modal','1');
+  modal.innerHTML = box;
+  modal.addEventListener('click', function(e){ if(e.target===modal) modal.remove(); });
+  document.body.appendChild(modal);
+}
+
+function closeManualModal(){ var m=document.querySelector('[data-modal]'); if(m) m.remove(); }
+
+function saveManualPrices() {
+  var updated = 0;
+  portfolio.forEach(function(s){
+    var inp = document.getElementById('mprice_'+s.ticker);
+    if(inp && parseFloat(inp.value) > 0){
+      CURRENT_PRICES[s.ticker] = parseFloat(inp.value);
+      updated++;
+    }
+  });
+  var now = new Date();
+  PRICES_UPDATED = now.toLocaleDateString('en-IN',{day:'numeric',month:'short'})
+    +' '+now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})
+    +' (manual)';
+  localStorage.setItem('me_manual_prices', JSON.stringify(CURRENT_PRICES));
+  localStorage.setItem('me_prices_updated', PRICES_UPDATED);
+  var pdEl = document.getElementById('priceDate');
+  if(pdEl) pdEl.textContent = PRICES_UPDATED;
+  var ps = document.getElementById('priceStatus');
+  if(ps) ps.innerHTML = '<span style="color:var(--green)">✓ '+updated+' prices updated manually</span>';
+  document.querySelector('[data-modal]').remove();
+  renderPortfolio();
+  autoRefreshSignals();
 }
 
 // Global portfolio - always initialized to default
@@ -1299,7 +1419,7 @@ async function fetchPortfolioNews() {
     loader.style.display = 'none';
     empty.style.display = 'block';
     empty.querySelector('div').textContent = '⚠️';
-    empty.querySelectorAll('div')[1].innerHTML = 'News requires AI access.<br><a href="https://cors-anywhere.herokuapp.com/corsdemo" target="_blank" style="color:var(--blue);">Activate CORS access first →</a>';
+    empty.querySelectorAll('div')[1].innerHTML = 'Get your free Gemini API key first.<br><a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:var(--blue);font-weight:600;">→ aistudio.google.com/app/apikey</a><br><br><button onclick="promptForGeminiKey();fetchPortfolioNews();" style="margin-top:8px;background:var(--navy);color:#fff;border:none;border-radius:7px;padding:8px 18px;font-size:13px;cursor:pointer;">🔑 Enter Key & Fetch News</button>';
   }
 
   btn.disabled = false;
@@ -1767,16 +1887,16 @@ async function analyzePortfolio(){
   }catch(e){
     clearInterval(iv);
     document.getElementById('portLoader').classList.remove('on');
-    var isCors = e.message === 'CORS_BLOCKED';
     document.getElementById('portAiBody').innerHTML=
-      '<div style="background:var(--amber-bg);border:1px solid rgba(180,83,9,0.25);border-radius:8px;padding:16px;">'
-      +'<div style="font-weight:700;margin-bottom:10px;color:var(--amber);">⚡ One-time AI setup needed</div>'
+      '<div style="background:var(--blue-bg);border:1px solid rgba(29,78,216,0.25);border-radius:8px;padding:16px;">'
+      +'<div style="font-weight:700;margin-bottom:10px;color:var(--blue);">🔑 Free Gemini API Key Needed</div>'
       +'<div style="font-size:12px;color:var(--text2);line-height:1.9;">'
-      +'<strong>Step 1:</strong> Open this link in a new tab:<br>'
-      +'<a href="https://cors-anywhere.herokuapp.com/corsdemo" target="_blank" style="color:var(--blue);font-weight:600;">→ cors-anywhere.herokuapp.com/corsdemo</a><br><br>'
-      +'<strong>Step 2:</strong> Click <strong>"Request temporary access"</strong> button<br><br>'
-      +'<strong>Step 3:</strong> Come back here and click <strong>AI Sell/Switch Analysis</strong> again<br><br>'
-      +'<span style="font-size:11px;color:var(--text3);">This unlocks the AI for ~1 hour. Free, no login needed.</span>'
+      +'<strong>Step 1:</strong> Go to (free, just sign in with Google):<br>'
+      +'<a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:var(--blue);font-weight:600;">→ aistudio.google.com/app/apikey</a><br><br>'
+      +'<strong>Step 2:</strong> Click <strong>"Create API Key"</strong><br><br>'
+      +'<strong>Step 3:</strong> Copy the key and click the button below<br><br>'
+      +'<button onclick="promptForGeminiKey();analyzePortfolio();" style="background:var(--navy);color:#fff;border:none;border-radius:7px;padding:9px 20px;font-size:13px;cursor:pointer;font-family:Inter,sans-serif;font-weight:500;">🔑 Enter API Key & Retry</button>'
+      +'<div style="margin-top:10px;font-size:11px;color:var(--text3);">100% free · No credit card · 15 requests/minute · Powered by Google Gemini</div>'
       +'</div></div>';
   }
   btn.disabled=false;btn.textContent='🧠 AI Sell/Switch Analysis';
@@ -2212,47 +2332,75 @@ async function buildProjNarrative(totalInvested){
 }
 
 // ─── HELPERS ─────────────────────────────────────────────────────
-async function callClaude(prompt){
-  var payload = {
-    model:'claude-sonnet-4-20250514',
-    max_tokens:1000,
-    messages:[{role:'user',content:prompt}]
-  };
-  var target = 'https://api.anthropic.com/v1/messages';
-  var body = JSON.stringify(payload);
-  var headers = {'Content-Type':'application/json'};
+// ── GEMINI FREE API ─────────────────────────────────────────────
+// Get your free API key at: aistudio.google.com/app/apikey
+// 100% free, no credit card, 15 requests/minute
+var GEMINI_API_KEY = localStorage.getItem('me_gemini_key') || '';
 
-  // Try each proxy with timeout
-  async function tryFetch(url, opts, ms) {
-    var controller = new AbortController();
-    var timer = setTimeout(function(){ controller.abort(); }, ms||8000);
-    try {
-      var r = await fetch(url, Object.assign({signal:controller.signal}, opts));
-      clearTimeout(timer);
-      return r;
-    } catch(e) { clearTimeout(timer); return null; }
+function promptForGeminiKey() {
+  var key = prompt(
+    'Enter your FREE Gemini API key to enable AI features.\n\n' +
+    'Get it free (no credit card) at:\n' +
+    'aistudio.google.com/app/apikey\n\n' +
+    '1. Sign in with Google\n' +
+    '2. Click "Create API Key"\n' +
+    '3. Copy and paste it here:'
+  );
+  if(key && key.trim()) {
+    GEMINI_API_KEY = key.trim();
+    localStorage.setItem('me_gemini_key', GEMINI_API_KEY);
+    return true;
+  }
+  return false;
+}
+
+async function callClaude(prompt) {
+  // Check for API key
+  if(!GEMINI_API_KEY) {
+    if(!promptForGeminiKey()) {
+      throw new Error('NO_KEY');
+    }
   }
 
-  // 1. corsproxy.io - most reliable
-  var r1 = await tryFetch('https://corsproxy.io/?url='+encodeURIComponent(target),
-    {method:'POST',headers:headers,body:body}, 10000);
-  if(r1&&r1.ok){var d=await r1.json();var t=(d.content||[]).map(function(x){return x.text||'';}).join('');if(t)return t;}
+  var url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' + GEMINI_API_KEY;
 
-  // 2. crossorigin.me
-  var r2 = await tryFetch('https://crossorigin.me/'+target,
-    {method:'POST',headers:headers,body:body}, 8000);
-  if(r2&&r2.ok){var d2=await r2.json();var t2=(d2.content||[]).map(function(x){return x.text||'';}).join('');if(t2)return t2;}
+  var payload = {
+    contents: [{
+      parts: [{ text: prompt }]
+    }],
+    generationConfig: {
+      temperature: 0.7,
+      maxOutputTokens: 1500
+    }
+  };
 
-  // 3. cors-anywhere (needs one-time activation at https://cors-anywhere.herokuapp.com/corsdemo)
-  var r3 = await tryFetch('https://cors-anywhere.herokuapp.com/'+target,
-    {method:'POST',headers:Object.assign({'X-Requested-With':'XMLHttpRequest'},headers),body:body}, 8000);
-  if(r3&&r3.ok){var d3=await r3.json();var t3=(d3.content||[]).map(function(x){return x.text||'';}).join('');if(t3)return t3;}
+  try {
+    var res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
 
-  // 4. Direct (works if browser CORS policy allows)
-  var r4 = await tryFetch(target,{method:'POST',headers:headers,body:body},8000);
-  if(r4&&r4.ok){var d4=await r4.json();return(d4.content||[]).map(function(x){return x.text||'';}).join('');}
+    if(res.status === 400) {
+      // Invalid key - clear and prompt again
+      GEMINI_API_KEY = '';
+      localStorage.removeItem('me_gemini_key');
+      throw new Error('INVALID_KEY');
+    }
 
-  throw new Error('CORS_BLOCKED');
+    if(!res.ok) throw new Error('API_ERROR_' + res.status);
+
+    var data = await res.json();
+    var text = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    if(!text) throw new Error('EMPTY_RESPONSE');
+    return text;
+
+  } catch(e) {
+    if(e.message === 'INVALID_KEY') {
+      throw new Error('Invalid API key. Please get a new one from aistudio.google.com/app/apikey');
+    }
+    throw e;
+  }
 }
 
 function parseJSON(raw){
@@ -2307,8 +2455,15 @@ function resetToMyPortfolio(){
     if(d) d.value=new Date().toISOString().split('T')[0];
   } catch(e){}
 
-  // Price label
+  // Price label - load any saved manual prices
   try {
+    var savedPrices = localStorage.getItem('me_manual_prices');
+    var savedDate = localStorage.getItem('me_prices_updated');
+    if(savedPrices) {
+      var parsed = JSON.parse(savedPrices);
+      Object.assign(CURRENT_PRICES, parsed);
+      if(savedDate) PRICES_UPDATED = savedDate;
+    }
     var pl=document.getElementById('priceDate');
     if(pl) pl.textContent=PRICES_UPDATED;
   } catch(e){}
