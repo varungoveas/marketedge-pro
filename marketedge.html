@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- MarketEdge Pro v4.8 - 20260511062013 -->
+<!-- MarketEdge Pro v4.9 - 20260511071655 -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -910,7 +910,10 @@ async function fetchPricesViaAI() {
       autoRefreshSignals();
     }
   } catch(e) {
-    if(priceStatus) priceStatus.innerHTML = '<span style="color:var(--red)">AI price fetch failed. Try manual update.</span>';
+    var errMsg = e.message || 'Unknown error';
+    if(priceStatus) priceStatus.innerHTML =
+      '<span style="color:var(--red)">⚠ ' + errMsg.substring(0,80) + '</span> · ' +
+      '<a href="#" onclick="manualPriceUpdate();return false;" style="color:var(--blue);font-size:11px;font-weight:600;">Enter manually →</a>';
   }
 }
 
@@ -2386,45 +2389,59 @@ async function callClaude(prompt) {
     }
   }
 
-  var url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' + GEMINI_API_KEY;
-
   var payload = {
-    contents: [{
-      parts: [{ text: prompt }]
-    }],
-    generationConfig: {
-      temperature: 0.7,
-      maxOutputTokens: 1500
-    }
+    contents: [{ parts: [{ text: prompt }] }],
+    generationConfig: { temperature: 0.7, maxOutputTokens: 1500 }
   };
 
-  try {
-    var res = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
+  // Try multiple Gemini models in order
+  var models = [
+    'gemini-1.5-flash',
+    'gemini-1.5-flash-latest',
+    'gemini-2.0-flash',
+    'gemini-pro'
+  ];
 
-    if(res.status === 400) {
-      // Invalid key - clear and prompt again
-      GEMINI_API_KEY = '';
-      localStorage.removeItem('me_gemini_key');
-      throw new Error('INVALID_KEY');
+  var lastErr = null;
+  for(var mi=0; mi<models.length; mi++){
+    var url = 'https://generativelanguage.googleapis.com/v1beta/models/'+models[mi]+':generateContent?key=' + GEMINI_API_KEY;
+    try {
+      var res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      // 400 = invalid key, 404 = model not found, try next
+      if(res.status === 404) continue;
+      if(res.status === 400) {
+        var errData = await res.json();
+        var errMsg = errData?.error?.message || 'Bad request';
+        // If it's a key error, clear it
+        if(errMsg.toLowerCase().includes('api key') || errMsg.toLowerCase().includes('invalid')) {
+          GEMINI_API_KEY = '';
+          localStorage.removeItem('me_gemini_key');
+          throw new Error('Invalid API key: ' + errMsg);
+        }
+        // Otherwise try next model
+        lastErr = errMsg;
+        continue;
+      }
+      if(!res.ok) { lastErr = 'HTTP ' + res.status; continue; }
+
+      var data = await res.json();
+      var text = (data.candidates && data.candidates[0] && data.candidates[0].content &&
+                  data.candidates[0].content.parts && data.candidates[0].content.parts[0] &&
+                  data.candidates[0].content.parts[0].text) || '';
+      if(text) return text;
+      lastErr = 'Empty response from ' + models[mi];
+    } catch(e) {
+      if(e.message.includes('Invalid API key')) throw e;
+      lastErr = e.message;
     }
-
-    if(!res.ok) throw new Error('API_ERROR_' + res.status);
-
-    var data = await res.json();
-    var text = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
-    if(!text) throw new Error('EMPTY_RESPONSE');
-    return text;
-
-  } catch(e) {
-    if(e.message === 'INVALID_KEY') {
-      throw new Error('Invalid API key. Please get a new one from aistudio.google.com/app/apikey');
-    }
-    throw e;
   }
+
+  throw new Error('Gemini API failed: ' + (lastErr||'unknown error') + '. Check your key at aistudio.google.com/app/apikey');
 }
 
 function parseJSON(raw){
