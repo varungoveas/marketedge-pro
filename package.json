@@ -1,0 +1,15 @@
+{
+  "name": "marketedge-price-server",
+  "version": "1.0.0",
+  "description": "Free price server for MarketEdge Pro",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
