@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- MarketEdge Pro v4.7 - 20260511052031 -->
+<!-- MarketEdge Pro v4.8 - 20260511062013 -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -2336,6 +2336,30 @@ async function buildProjNarrative(totalInvested){
 // Get your free API key at: aistudio.google.com/app/apikey
 // 100% free, no credit card, 15 requests/minute
 var GEMINI_API_KEY = localStorage.getItem('me_gemini_key') || '';
+
+function manageApiKey(){
+  var current = GEMINI_API_KEY ? '✓ Key saved: ' + GEMINI_API_KEY.substring(0,16) + '...' : '✗ No key set';
+  var key = prompt(
+    'FREE Gemini API Key Manager\n' +
+    'Current status: ' + current + '\n\n' +
+    'Get free key (no credit card):\n' +
+    '  1. Go to: aistudio.google.com/app/apikey\n' +
+    '  2. Sign in with Google\n' +
+    '  3. Click Create API Key\n\n' +
+    'Paste your key below (or leave blank to keep current):'
+  );
+  if(key && key.trim().length > 10) {
+    GEMINI_API_KEY = key.trim();
+    localStorage.setItem('me_gemini_key', GEMINI_API_KEY);
+    alert('✓ API key saved! AI features are now enabled.\nTry clicking "Refresh Prices" → "Try AI prices"');
+  } else if(key === '') {
+    if(confirm('Clear your saved API key?')) {
+      GEMINI_API_KEY = '';
+      localStorage.removeItem('me_gemini_key');
+      alert('Key cleared.');
+    }
+  }
+}
 
 function promptForGeminiKey() {
   var key = prompt(
