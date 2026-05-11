@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- MarketEdge Pro v5.0 - 20260511084426 -->
+<!-- MarketEdge Pro v5.1 - 20260511090535 -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -2396,12 +2396,14 @@ async function callClaude(prompt) {
   };
 
   // Try models in order — gemini-2.0-flash-lite has highest free quota
+  // Updated May 2026 — gemini-2.0 retired Mar 2026, use 2.5 series
   var models = [
-    'gemini-2.0-flash-lite',
-    'gemini-2.0-flash',
+    'gemini-2.5-flash-lite-preview-06-17',
+    'gemini-2.5-flash',
+    'gemini-2.5-flash-preview-05-20',
+    'gemini-2.5-flash-preview-04-17',
     'gemini-1.5-flash-8b',
-    'gemini-1.5-flash',
-    'gemini-1.0-pro'
+    'gemini-1.5-flash'
   ];
 
   var lastErr = null;
