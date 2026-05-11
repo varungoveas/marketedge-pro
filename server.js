@@ -8,10 +8,11 @@ app.use((req, res, next) => {
   next();
 });
 
+// Verified Yahoo Finance symbols for NSE stocks
 const SYMBOLS = {
-  HYUNDAI:     'HYUNDAIMOTOR.NS',
+  HYUNDAI:     '533395.NS',       // Hyundai Motor India NSE code
   TATAGOLD:    'TATAGOLD.NS',
-  SWANDEFENCE: 'SWANDEFENCE.NS',
+  SWANDEFENCE: 'SWANDEFENSE.NS',  // Note: Yahoo uses SWANDEFENSE not SWANDEFENCE
   ASHOKLEY:    'ASHOKLEYLAND.NS',
   FEDERALBNK:  'FEDERALBNK.NS',
   BPCL:        'BPCL.NS',
@@ -26,6 +27,13 @@ const SYMBOLS = {
   UNIONBANK:   'UNIONBANK.NS',
   SUZLON:      'SUZLON.NS',
   GTLINFRA:    'GTLINFRA.NS',
+};
+
+// Fallback symbols to try if primary fails
+const FALLBACK_SYMBOLS = {
+  HYUNDAI:     'HYUNDAI.NS',
+  SWANDEFENCE: 'SWANDEFENCE.NS',
+  GTLINFRA:    'GTLINFRA.BO',    // Try BSE if NSE fails
 };
 
 async function fetchSingle(sym) {
@@ -45,7 +53,7 @@ async function fetchSingle(sym) {
       if (!r.ok) continue;
       const d = await r.json();
       const price = d?.chart?.result?.[0]?.meta?.regularMarketPrice;
-      if (price) return parseFloat(price.toFixed(2));
+      if (price && price > 0) return parseFloat(price.toFixed(2));
     } catch(e) {}
   }
   return null;
@@ -54,13 +62,18 @@ async function fetchSingle(sym) {
 app.get('/prices', async (req, res) => {
   try {
     const prices = {};
-    
-    // Fetch all stocks in parallel (faster)
+
+    // Fetch all in parallel
     const tasks = Object.entries(SYMBOLS).map(async ([key, sym]) => {
-      const price = await fetchSingle(sym);
+      let price = await fetchSingle(sym);
+      // Try fallback symbol if primary failed
+      if (!price && FALLBACK_SYMBOLS[key]) {
+        price = await fetchSingle(FALLBACK_SYMBOLS[key]);
+      }
       if (price) prices[key] = price;
+      else console.log(`Failed to fetch: ${key} (${sym})`);
     });
-    
+
     await Promise.all(tasks);
 
     const now = new Date().toLocaleString('en-IN', {
@@ -69,13 +82,10 @@ app.get('/prices', async (req, res) => {
       hour: '2-digit', minute: '2-digit'
     });
 
-    console.log(`Fetched ${Object.keys(prices).length}/17 prices`);
-    
-    res.json({
-      prices,
-      updated: now,
-      count: Object.keys(prices).length
-    });
+    console.log(`Fetched ${Object.keys(prices).length}/17 prices at ${now}`);
+    console.log('Missing:', Object.keys(SYMBOLS).filter(k => !prices[k]));
+
+    res.json({ prices, updated: now, count: Object.keys(prices).length });
   } catch(err) {
     console.error(err);
     res.status(500).json({ error: err.message, prices: {} });
@@ -83,7 +93,7 @@ app.get('/prices', async (req, res) => {
 });
 
 app.get('/', (req, res) => {
-  res.json({ status: 'MarketEdge Price Server v2.0 running' });
+  res.json({ status: 'MarketEdge Price Server v2.1 running' });
 });
 
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT, () => console.log(`Server v2.1 running on port ${PORT}`));
